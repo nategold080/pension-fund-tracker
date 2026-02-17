@@ -11,6 +11,7 @@ Usage:
 
 import logging
 import sys
+from pathlib import Path
 
 import click
 
@@ -159,6 +160,21 @@ def quality(ctx):
 
     finally:
         db.close()
+
+
+@cli.command()
+@click.pass_context
+def dashboard(ctx):
+    """Launch the Streamlit dashboard."""
+    import subprocess
+    import sys
+
+    dashboard_path = Path(__file__).parent / "dashboard.py"
+    click.echo(f"Launching dashboard from {dashboard_path} ...")
+    subprocess.run(
+        [sys.executable, "-m", "streamlit", "run", str(dashboard_path)],
+        check=True,
+    )
 
 
 @cli.command("summary-stats")

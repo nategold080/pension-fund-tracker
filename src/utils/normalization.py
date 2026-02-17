@@ -451,3 +451,337 @@ def normalize_gp_name(name: str) -> str:
     if not name:
         return ""
     return normalize_fund_name(name)
+
+
+# ---- GP Extraction from Fund Names ----
+
+# Top GP names lookup table — canonical forms
+_KNOWN_GPS = [
+    "KKR",
+    "Blackstone",
+    "Apollo",
+    "TPG",
+    "Carlyle",
+    "Warburg Pincus",
+    "Hellman & Friedman",
+    "Advent International",
+    "Francisco Partners",
+    "Bain Capital",
+    "Silver Lake",
+    "Vista Equity",
+    "Thoma Bravo",
+    "Ares",
+    "Brookfield",
+    "EQT",
+    "CVC Capital Partners",
+    "Permira",
+    "Cinven",
+    "Apax",
+    "Bridgepoint",
+    "Hg",
+    "General Atlantic",
+    "Insight Partners",
+    "Sequoia",
+    "Andreessen Horowitz",
+    "Accel",
+    "Bessemer Venture Partners",
+    "Greylock",
+    "Lightspeed",
+    "NEA",
+    "Clearlake",
+    "Genstar",
+    "GTCR",
+    "Leonard Green",
+    "Madison Dearborn",
+    "Providence Equity",
+    "Welsh Carson",
+    "Centerbridge",
+    "Cerberus",
+    "Oaktree",
+    "Angelo Gordon",
+    "Alchemy",
+    "Berkshire",
+    "Kohlberg",
+    "Summit Partners",
+    "TA Associates",
+    "Veritas Capital",
+    "Platinum Equity",
+    "Roark Capital",
+    "Audax",
+    "American Securities",
+    "Clayton Dubilier & Rice",
+    "Kelso",
+    "New Mountain",
+    "Riverside",
+    "Charlesbank",
+    "Sun Capital",
+    "Sycamore Partners",
+    "Trilantic",
+    "Harvest Partners",
+    "ICG",
+    "PAI Partners",
+    "BC Partners",
+    "Investindustrial",
+    "Nordic Capital",
+    "Triton",
+    "Astorg",
+    "IK",
+    "Montagu",
+    "Wendel",
+    "Ardian",
+    "Coller Capital",
+    "HarbourVest",
+    "Lexington Partners",
+    "Adams Street",
+    "Hamilton Lane",
+    "Pantheon",
+    "StepStone",
+    "GI Partners",
+    "Menlo Ventures",
+    "Battery Ventures",
+    "Index Ventures",
+    "Benchmark",
+    "Founders Fund",
+    "Kleiner Perkins",
+    "GGV Capital",
+    "Tiger Global",
+    "Coatue",
+    "D1 Capital",
+    "Lone Pine",
+    "Viking Global",
+    "Baupost",
+    "Elliott",
+    "Starwood",
+    "Lone Star",
+    "Colony Capital",
+    "Heitman",
+    "CBRE",
+    "Blackrock",
+    "BlackRock",
+    "Invesco",
+    "Morgan Stanley",
+    "Goldman Sachs",
+    "JP Morgan",
+    "JPMorgan",
+    "Deutsche Bank",
+    "Credit Suisse",
+    "UBS",
+    "Barclays",
+    "Macquarie",
+    "AEW",
+    "Prologis",
+    "Hines",
+    "Tishman Speyer",
+    "Related",
+    "Rockwood",
+    "Denham",
+    "EnCap",
+    "Kayne Anderson",
+    "ArcLight",
+    "Stonepeak",
+    "EIG",
+    "Global Infrastructure Partners",
+    "Antin Infrastructure",
+    "I Squared Capital",
+    "Partners Group",
+    "AlpInvest",
+    "Neuberger Berman",
+    "ACON",
+    "Accel-KKR",
+    "Advent Global Technology",
+    "A&M Capital Partners",
+    "Birch Hill Equity Partners",
+    "Boston Ventures",
+    "Brazos Equity",
+    "Brentwood Associates",
+    "CCMP Capital",
+    "CDH",
+    "Duff & Phelps",
+    "EnCap Flatrock",
+    "First Reserve",
+    "Golden Gate Capital",
+    "Green Equity",
+    "Greenhill",
+    "H&F",
+    "Hg Capital",
+    "Industry Ventures",
+    "JMI Equity",
+    "Kelso & Company",
+    "Linden Capital",
+    "MBK Partners",
+    "MidOcean",
+    "Oak Hill",
+    "Ocean Avenue",
+    "Pacific Equity Partners",
+    "Peak Rock",
+    "Peppertree Capital",
+    "Quadrangle",
+    "Quantum Energy Partners",
+    "Rhone",
+    "Siris Capital",
+    "Sterling Capital",
+    "Stone Point Capital",
+    "Symphony Technology",
+    "TCV",
+    "TH Lee",
+    "Thomas H. Lee",
+    "Torchlight",
+    "Tower Brook",
+    "TowerBrook",
+    "Trident Capital",
+    "Vestar Capital",
+    "Vitruvian Partners",
+    "WL Ross",
+    "Warburg",
+    "Waterton",
+    "Wellspring Capital",
+    "Wind Point",
+    "57 Stars",
+    "Acrew Capital",
+    "Actis",
+    "Blue Run Ventures",
+    "Butterfly",
+    "Endeavour Capital",
+    "OVP Venture Partners",
+    "ARCH Venture",
+]
+
+# Build a lookup structure: lowercased GP name -> canonical GP name
+_GP_LOOKUP = {}
+for _gp in _KNOWN_GPS:
+    _GP_LOOKUP[_gp.lower()] = _gp
+
+# Roman numeral pattern for stripping
+_ROMAN_NUMERAL_PATTERN = re.compile(
+    r'\b(XXV|XXIV|XXIII|XXII|XXI|XX|XIX|XVIII|XVII|XVI|XV|XIV|XIII|XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I)\b',
+    re.IGNORECASE,
+)
+
+# Suffixes to strip (order matters — longer/more specific first)
+_FUND_SUFFIXES = [
+    "Limited Partnership",
+    "Capital Partners",
+    "Private Equity",
+    "Investment Fund",
+    "Equity Partners",
+    "Venture Partners",
+    "Growth Equity Fund",
+    "Growth Equity",
+    "Growth Fund",
+    "Buyout Fund",
+    "Buyout Partners",
+    "Strategic Partners",
+    "Tactical Opportunities Fund",
+    "Tactical Opportunities",
+    "Special Situations",
+    "Real Estate Fund",
+    "Real Estate Partners",
+    "Real Estate",
+    "Infrastructure Partners",
+    "Infrastructure Fund",
+    "Infrastructure",
+    "Energy Partners",
+    "Energy Fund",
+    "Credit Opportunities",
+    "Credit Partners",
+    "Credit Fund",
+    "Opportunities Fund",
+    "Opportunities",
+    "Capital Fund",
+    "Capital Appreciation Fund",
+    "Global Fund",
+    "Co-Investment",
+    "Coinvestment",
+    "Co-Invest",
+    "Compounding Capital",
+    "Strategic Opportunities",
+    "Secondary Purchase",
+    "Partners",
+    "Capital",
+    "Fund",
+    "Investors",
+    "Ventures",
+    "GPE",
+    "SCSp",
+    "Cooperatief U.A.",
+    "Cooperatief",
+    "L.P.",
+    "LP",
+    "LLC",
+    "Ltd",
+    "Inc",
+]
+
+
+def extract_gp_from_fund_name(fund_name: str) -> Optional[str]:
+    """Extract the General Partner name from a fund name.
+
+    Strategy:
+    1. First try matching against the known GP lookup table (longest match wins).
+    2. If no match, strip common fund suffixes, Roman numerals, letter suffixes,
+       and numeric identifiers to isolate the GP name.
+
+    Args:
+        fund_name: The fund name (raw or normalized).
+
+    Returns:
+        GP name string, or None if extraction fails.
+    """
+    if not fund_name or not fund_name.strip():
+        return None
+
+    name = fund_name.strip()
+
+    # Strategy 1: Match against known GP names (check longest matches first)
+    name_lower = name.lower()
+    best_match = None
+    best_len = 0
+    for gp_lower, gp_canonical in _GP_LOOKUP.items():
+        if gp_lower in name_lower and len(gp_lower) > best_len:
+            best_match = gp_canonical
+            best_len = len(gp_lower)
+
+    if best_match:
+        return best_match
+
+    # Strategy 2: Strip suffixes to isolate GP name
+    s = name
+
+    # Remove legal suffixes first
+    s = re.sub(r',?\s*L\.?P\.?\s*$', '', s, flags=re.IGNORECASE)
+    s = re.sub(r',?\s*LLC\s*$', '', s, flags=re.IGNORECASE)
+    s = re.sub(r',?\s*Ltd\.?\s*$', '', s, flags=re.IGNORECASE)
+    s = re.sub(r',?\s*Inc\.?\s*$', '', s, flags=re.IGNORECASE)
+    s = re.sub(r',?\s*SCSp\s*$', '', s, flags=re.IGNORECASE)
+    s = re.sub(r',?\s*Cooperatief\s*U\.?A\.?\s*$', '', s, flags=re.IGNORECASE)
+
+    # Remove parenthetical content (e.g., "(NYSCRF)", "(Hub)", "(CalPERS)", "(Surge)", "(Secondary Purchase)")
+    s = re.sub(r'\s*\([^)]*\)\s*', ' ', s)
+
+    # Remove trailing letter suffixes after hyphens or spaces: "- S", "-C", "B", "D", "'C'", "'D'"
+    s = re.sub(r"\s*[-–]\s*[A-E]\s*$", '', s)
+    s = re.sub(r"\s+'[A-E]'\s*$", '', s)
+    s = re.sub(r"\s+[A-E]\s*$", '', s)
+
+    # Remove Roman numerals
+    s = _ROMAN_NUMERAL_PATTERN.sub('', s)
+
+    # Remove trailing numbers (fund series numbers like "3.5", "2", etc.)
+    s = re.sub(r'\s+\d+\.?\d*\s*$', '', s)
+
+    # Remove common fund suffixes (from most specific to least)
+    for suffix in _FUND_SUFFIXES:
+        pattern = re.compile(r'\s+' + re.escape(suffix) + r'\s*$', re.IGNORECASE)
+        s = pattern.sub('', s)
+
+    # Remove trailing hyphens, commas, whitespace
+    s = re.sub(r'[\s,\-–]+$', '', s)
+
+    # Collapse whitespace
+    s = re.sub(r'\s+', ' ', s).strip()
+
+    # If we got something reasonable (at least 2 chars, not just numbers)
+    if s and len(s) >= 2 and not s.replace(' ', '').isdigit():
+        return s
+
+    return None

@@ -6,7 +6,7 @@ from pathlib import Path
 from src.adapters.ny_common import NYCommonAdapter
 
 
-CACHE_FILE = Path("data/cache/ny_common/asset_listing_2024.pdf")
+CACHE_FILE = Path("data/cache/ny_common/asset_listing_2025.pdf")
 
 
 @pytest.fixture
@@ -63,10 +63,10 @@ class TestNYCommonAdapter:
             assert r["extraction_method"] == "deterministic_pdf"
             assert r["extraction_confidence"] == 0.95
 
-    def test_as_of_date_is_march_2024(self, records):
+    def test_as_of_date_is_march_2025(self, records):
         dates = {r["as_of_date"] for r in records}
         assert len(dates) == 1
-        assert dates.pop() == "2024-03-31"
+        assert dates.pop() == "2025-03-31"
 
     def test_commitment_amounts_reasonable(self, records):
         for r in records:
@@ -82,9 +82,9 @@ class TestNYCommonAdapter:
                     f"Unreasonable multiple {r['net_multiple']} for {r['fund_name_raw']}"
 
     def test_total_commitment_matches_pdf(self, records):
-        """Total committed should be ~$66.5B (per PDF total line)."""
+        """Total committed should be ~$70B (per 2025 PDF total line)."""
         total = sum(r["commitment_mm"] for r in records if r["commitment_mm"])
-        assert 60_000 < total < 70_000, f"Total commitment ${total:,.0f}M unexpected"
+        assert 60_000 < total < 80_000, f"Total commitment ${total:,.0f}M unexpected"
 
     def test_known_fund_present(self, records):
         """Verify well-known funds are in the data."""

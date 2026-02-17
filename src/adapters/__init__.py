@@ -12,6 +12,7 @@ from src.adapters.texas_trs import TexasTRSAdapter
 from src.adapters.florida_sba import FloridaSBAAdapter
 
 # Adapters that run by default (reliable, fully automated)
+# Note: texas_trs excluded — adapter produces only 1 summary record, not fund-level data
 DEFAULT_ADAPTERS = ["calpers", "calstrs", "wsib", "oregon", "ny_common"]
 
 # Registry of all available adapters (including those requiring manual steps)

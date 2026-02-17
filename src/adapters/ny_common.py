@@ -1,9 +1,9 @@
 """New York State Common Retirement Fund Private Equity adapter.
 
 Data source: NY State Comptroller publishes an annual Asset Listing PDF.
-URL: https://www.osc.ny.gov/files/retirement/resources/pdf/asset-listing-2024.pdf
+URL: https://www.osc.ny.gov/files/retirement/resources/pdf/asset-listing-2025.pdf
 
-The Private Equity Investments section (pages 170-175 in the 2024 edition)
+The Private Equity Investments section (pages 146-152 in the 2025 edition)
 contains: Security Description (fund name), Date Committed, Committed,
 Contributed, Cumulative Distributions, Fair Value, Total Value.
 All amounts in raw dollars.
@@ -26,7 +26,7 @@ from src.utils.normalization import parse_dollar_amount
 logger = logging.getLogger(__name__)
 
 NY_COMMON_PDF_URL = (
-    "https://www.osc.ny.gov/files/retirement/resources/pdf/asset-listing-2024.pdf"
+    "https://www.osc.ny.gov/files/retirement/resources/pdf/asset-listing-2025.pdf"
 )
 NY_COMMON_PAGE_URL = (
     "https://www.osc.ny.gov/common-retirement-fund/resources/"
@@ -34,15 +34,15 @@ NY_COMMON_PAGE_URL = (
 )
 CACHE_DIR = Path("data/cache/ny_common")
 
-# Column x-position boundaries (from word-level inspection of the PDF):
-#   Fund Name:     x < 245
-#   Date:          245 <= x < 280
-#   Committed:     280 <= x < 340
-#   Contributed:   340 <= x < 400
-#   Distributions: 400 <= x < 458
-#   Fair Value:    458 <= x < 515
-#   Total Value:   x >= 515
-NY_COL_BOUNDARIES = [245, 280, 340, 400, 458, 515]
+# Column x-position boundaries (from word-level inspection of the 2025 PDF):
+#   Fund Name:     x < 250
+#   Date:          250 <= x < 295
+#   Committed:     295 <= x < 355
+#   Contributed:   355 <= x < 415
+#   Distributions: 415 <= x < 472
+#   Fair Value:    472 <= x < 530
+#   Total Value:   x >= 530
+NY_COL_BOUNDARIES = [250, 295, 355, 415, 472, 530]
 
 
 class NYCommonAdapter(PensionFundAdapter):
@@ -59,7 +59,7 @@ class NYCommonAdapter(PensionFundAdapter):
 
     def __init__(self, use_cache: bool = False):
         self.use_cache = use_cache
-        self._cache_path = CACHE_DIR / "asset_listing_2024.pdf"
+        self._cache_path = CACHE_DIR / "asset_listing_2025.pdf"
 
     def fetch_source(self) -> bytes:
         """Fetch the NY Common asset listing PDF."""
@@ -119,8 +119,13 @@ class NYCommonAdapter(PensionFundAdapter):
         if not words:
             return []
 
+        # Scale column boundaries based on page width (calibrated for 612pt pages)
+        page_width = page.width
+        scale = page_width / 612.0
+        col_boundaries = [int(b * scale) for b in NY_COL_BOUNDARIES]
+
         # Group words by vertical position (row)
-        row_tolerance = 3
+        row_tolerance = int(3 * scale)
         rows_dict: dict[float, list] = {}
         for w in words:
             top = round(w["top"] / row_tolerance) * row_tolerance
@@ -137,7 +142,7 @@ class NYCommonAdapter(PensionFundAdapter):
             for w in row_words:
                 x = w["x0"]
                 col_idx = 0
-                for i, boundary in enumerate(NY_COL_BOUNDARIES):
+                for i, boundary in enumerate(col_boundaries):
                     if x >= boundary:
                         col_idx = i + 1
                 columns[col_idx].append(w["text"])
@@ -202,9 +207,9 @@ class NYCommonAdapter(PensionFundAdapter):
                     "net_irr": None,  # Not provided in this source
                     "net_multiple": net_multiple,
                     "dpi": None,
-                    "as_of_date": "2024-03-31",
+                    "as_of_date": "2025-03-31",
                     "source_url": NY_COMMON_PDF_URL,
-                    "source_document": "NY Common Retirement Fund Asset Listing 2024",
+                    "source_document": "NY Common Retirement Fund Asset Listing 2025",
                     "extraction_method": "deterministic_pdf",
                     "extraction_confidence": 0.95,
                 }
