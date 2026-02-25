@@ -288,19 +288,31 @@ def render_board_intelligence():
         unsafe_allow_html=True,
     )
 
-    # ── Meeting selector ──────────────────────────────────────────────
-    meeting_labels = [
-        f"{m['pension_system']} — {m['meeting_date']}"
-        for m in ordered_meetings
-    ]
-    selected_label = st.radio(
-        "Select a board meeting to review",
-        options=meeting_labels,
-        index=0,
-        horizontal=True,
-        label_visibility="collapsed",
-    )
-    m = ordered_meetings[meeting_labels.index(selected_label)]
+    # ── Meeting selector (prev/next navigation) ─────────────────────
+    if "board_intel_idx" not in st.session_state:
+        st.session_state.board_intel_idx = 0
+
+    nav1, nav2, nav3 = st.columns([1, 4, 1])
+    with nav1:
+        if st.button("\u2190  Previous", use_container_width=True,
+                     disabled=(st.session_state.board_intel_idx == 0)):
+            st.session_state.board_intel_idx -= 1
+            st.rerun()
+    with nav2:
+        idx = st.session_state.board_intel_idx
+        st.markdown(
+            f"<p style='text-align: center; font-family: Inter, sans-serif; "
+            f"font-size: 1rem; font-weight: 600; color: #E2E8F0; margin: 6px 0;'>"
+            f"Example {idx + 1} of {len(ordered_meetings)}</p>",
+            unsafe_allow_html=True,
+        )
+    with nav3:
+        if st.button("Next  \u2192", use_container_width=True,
+                     disabled=(st.session_state.board_intel_idx >= len(ordered_meetings) - 1)):
+            st.session_state.board_intel_idx += 1
+            st.rerun()
+
+    m = ordered_meetings[st.session_state.board_intel_idx]
 
     # ── Meeting banner ────────────────────────────────────────────────
     commit_total = sum(c["amount_mm"] for c in m["investment_commitments"])
@@ -358,48 +370,38 @@ def render_board_intelligence():
         )
         st.markdown("")
 
-    # ── Investment commitments ────────────────────────────────────────
+    # ── Key board actions summary ─────────────────────────────────────
+    section_header("Key Board Actions")
+    st.markdown(
+        "<div style='background: #162240; border: 1px solid #334155; border-radius: 8px; "
+        "padding: 16px 20px; margin-bottom: 14px; line-height: 1.7;'>"
+        "<span style='font-family: Inter, sans-serif; font-size: 0.88rem; color: #94A3B8;'>"
+        "The following actions were extracted automatically from a "
+        f"<strong style='color: #E2E8F0;'>{m['pages']}-page</strong> board document. "
+        "This intelligence — buried across meeting narratives, presentation slides, and "
+        "formal motions — would otherwise require hours of manual review to surface. "
+        "Unlike the Portfolio Analytics tab (which tracks historical commitment data from "
+        "published holdings), these are <strong style='color: #E2E8F0;'>forward-looking "
+        "signals</strong> extracted from live board proceedings."
+        "</span></div>",
+        unsafe_allow_html=True,
+    )
+
     if m["investment_commitments"]:
-        n_commits = len(m["investment_commitments"])
-        section_header(f"Investment Commitments ({n_commits})")
-
-        col1, col2 = st.columns([2, 3])
-
-        with col1:
-            ic_chart = pd.DataFrame(m["investment_commitments"]).sort_values(
-                "amount_mm", ascending=True)
-            fig = go.Figure(go.Bar(
-                y=ic_chart["fund"],
-                x=ic_chart["amount_mm"],
-                orientation="h",
-                marker_color=ACCENT_BLUE,
-                text=ic_chart.apply(
-                    lambda r: f"${r['amount_mm']:,.0f}M — {r['gp']}", axis=1),
-                textposition="inside",
-                insidetextanchor="end",
-                textfont=dict(color="white", size=11),
-                hovertemplate="<b>%{y}</b><br>$%{x:,.0f}M<extra></extra>",
-            ))
-            plotly_dark_layout(fig, height=max(200, n_commits * 38),
-                              showlegend=False,
-                              xaxis_title="Amount ($M)",
-                              margin=dict(l=40, r=20, t=10, b=40))
-            st.plotly_chart(fig, use_container_width=True)
-
-        with col2:
-            ic_df = pd.DataFrame(m["investment_commitments"])
-            ic_df["amount_mm"] = ic_df["amount_mm"].apply(lambda x: f"${x:,.0f}M")
-            display_cols = {"fund": "Fund", "amount_mm": "Amount",
-                            "strategy": "Strategy", "gp": "GP"}
-            # Only show GP relationship if any exist
-            if any(c.get("gp_relationship") for c in m["investment_commitments"]):
-                display_cols["gp_relationship"] = "GP Relationship"
-            display_cols["vote"] = "Vote"
-            st.dataframe(
-                ic_df[list(display_cols.keys())],
-                column_config=display_cols,
-                use_container_width=True,
-                hide_index=True,
+        for c in m["investment_commitments"]:
+            rel = ""
+            if c.get("gp_relationship"):
+                rel = (f" <span style='color: #94A3B8;'>({c['gp_relationship']})</span>")
+            st.markdown(
+                f"<div style='background: #1B2A4A; border-left: 3px solid {ACCENT_BLUE}; "
+                f"padding: 10px 14px; margin-bottom: 6px; border-radius: 0 6px 6px 0;'>"
+                f"<span style='font-family: Inter, sans-serif; font-weight: 600; "
+                f"font-size: 0.9rem; color: #E2E8F0;'>"
+                f"${c['amount_mm']:,.0f}M &rarr; {c['fund']}</span>"
+                f"<span style='font-family: Inter, sans-serif; font-size: 0.82rem; "
+                f"color: #94A3B8;'> &nbsp;&bull;&nbsp; {c['strategy']} "
+                f"&nbsp;&bull;&nbsp; {c['gp']}</span>{rel}</div>",
+                unsafe_allow_html=True,
             )
         st.markdown("")
 
@@ -424,55 +426,73 @@ def render_board_intelligence():
             )
         st.markdown("")
 
-    # ── Personnel & policy in two columns ─────────────────────────────
+    # ── Personnel, policy, manager sections ──────────────────────────
     has_personnel = bool(m["personnel_changes"])
     has_policy = bool(m.get("policy_approvals"))
     has_manager = bool(m.get("manager_selections"))
 
-    if has_personnel or has_policy or has_manager:
-        col1, col2 = st.columns(2)
+    # Build list of section renderers so we can lay them out adaptively
+    _sections = []
 
-        with col1:
-            if has_personnel:
-                section_header("Personnel & Organizational Changes")
-                pc_df = pd.DataFrame(m["personnel_changes"])
-                display_cols = {"event": "Event", "person": "Person",
-                                "new_role": "Role / Position"}
-                if any(p.get("vote") for p in m["personnel_changes"]):
-                    display_cols["vote"] = "Vote"
-                st.dataframe(
-                    pc_df[list(display_cols.keys())],
-                    column_config=display_cols,
-                    use_container_width=True,
-                    hide_index=True,
+    if has_personnel:
+        def _render_personnel(m=m):
+            section_header("Personnel & Organizational Changes")
+            pc_df = pd.DataFrame(m["personnel_changes"])
+            display_cols = {"event": "Event", "person": "Person",
+                            "new_role": "Role / Position"}
+            if any(p.get("vote") for p in m["personnel_changes"]):
+                display_cols["vote"] = "Vote"
+            st.dataframe(
+                pc_df[list(display_cols.keys())],
+                column_config=display_cols,
+                use_container_width=True,
+                hide_index=True,
+            )
+        _sections.append(_render_personnel)
+
+    if has_policy:
+        def _render_policy(m=m):
+            section_header("Policy Approvals")
+            for pa in m["policy_approvals"]:
+                st.markdown(
+                    f"<div style='background: #162240; border-left: 3px solid #00B894; "
+                    f"padding: 10px 14px; margin-bottom: 6px; border-radius: 0 6px 6px 0;'>"
+                    f"<span style='font-family: Inter, sans-serif; font-weight: 600; "
+                    f"font-size: 0.9rem; color: #E2E8F0;'>{pa['policy']}</span><br>"
+                    f"<span style='font-family: Inter, sans-serif; font-size: 0.82rem; "
+                    f"color: #94A3B8;'>{pa['status']}</span></div>",
+                    unsafe_allow_html=True,
                 )
+        _sections.append(_render_policy)
 
+    if has_manager:
+        def _render_manager(m=m):
+            section_header("Manager Selections")
+            for ms in m["manager_selections"]:
+                st.markdown(
+                    f"<div style='background: #162240; border-left: 3px solid #6C5CE7; "
+                    f"padding: 10px 14px; margin-bottom: 6px; border-radius: 0 6px 6px 0;'>"
+                    f"<span style='font-family: Inter, sans-serif; font-weight: 600; "
+                    f"font-size: 0.9rem; color: #E2E8F0;'>{ms['manager']}</span><br>"
+                    f"<span style='font-family: Inter, sans-serif; font-size: 0.82rem; "
+                    f"color: #94A3B8;'>{ms['mandate']} &nbsp;&bull;&nbsp; {ms['vote']}</span></div>",
+                    unsafe_allow_html=True,
+                )
+        _sections.append(_render_manager)
+
+    if len(_sections) >= 2:
+        col1, col2 = st.columns(2)
+        with col1:
+            _sections[0]()
         with col2:
-            if has_policy:
-                section_header("Policy Approvals")
-                for pa in m["policy_approvals"]:
-                    st.markdown(
-                        f"<div style='background: #162240; border-left: 3px solid #00B894; "
-                        f"padding: 10px 14px; margin-bottom: 6px; border-radius: 0 6px 6px 0;'>"
-                        f"<span style='font-family: Inter, sans-serif; font-weight: 600; "
-                        f"font-size: 0.9rem; color: #E2E8F0;'>{pa['policy']}</span><br>"
-                        f"<span style='font-family: Inter, sans-serif; font-size: 0.82rem; "
-                        f"color: #94A3B8;'>{pa['status']}</span></div>",
-                        unsafe_allow_html=True,
-                    )
+            _sections[1]()
+        for fn in _sections[2:]:
+            fn()
+    else:
+        for fn in _sections:
+            fn()
 
-            if has_manager:
-                section_header("Manager Selections")
-                for ms in m["manager_selections"]:
-                    st.markdown(
-                        f"<div style='background: #162240; border-left: 3px solid #6C5CE7; "
-                        f"padding: 10px 14px; margin-bottom: 6px; border-radius: 0 6px 6px 0;'>"
-                        f"<span style='font-family: Inter, sans-serif; font-weight: 600; "
-                        f"font-size: 0.9rem; color: #E2E8F0;'>{ms['manager']}</span><br>"
-                        f"<span style='font-family: Inter, sans-serif; font-size: 0.82rem; "
-                        f"color: #94A3B8;'>{ms['mandate']} &nbsp;&bull;&nbsp; {ms['vote']}</span></div>",
-                        unsafe_allow_html=True,
-                    )
+    if _sections:
         st.markdown("")
 
     # ── Forward-looking signals ───────────────────────────────────────
