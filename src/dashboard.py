@@ -483,12 +483,13 @@ def main():
             orientation="h",
             marker_color=ACCENT_BLUE,
             text=top_gps["total_bn"].apply(lambda x: f"${x:.1f}B"),
-            textposition="outside",
+            textposition="inside",
+            insidetextanchor="end",
+            textfont=dict(color="white"),
         ))
         plotly_dark_layout(fig, height=450, showlegend=False,
                           xaxis_title="Total Commitments ($B)",
-                          yaxis=dict(autorange="reversed"),
-                          margin=dict(l=40, r=100, t=40, b=40))
+                          yaxis=dict(autorange="reversed"))
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -501,27 +502,58 @@ def main():
         ]
 
         if not perf_data.empty:
-            fig = px.scatter(
-                perf_data, x="net_irr", y="net_multiple",
-                render_mode="svg",
-                color="pension_fund",
-                size="commitment_mm",
-                size_max=15,
-                opacity=0.6,
-                color_discrete_sequence=PALETTE,
-                labels={
-                    "net_irr": "Net IRR",
-                    "net_multiple": "Net Multiple (TVPI)",
-                    "pension_fund": "Pension System",
-                    "commitment_mm": "Commitment ($M)",
-                },
-                hover_data={"fund_name": True, "vintage_year": True},
-            )
-            plotly_dark_layout(fig, height=450)
-            fig.update_xaxes(tickformat=".0%")
-            fig.add_hline(y=1.0, line_dash="dash", line_color="#64748B", opacity=0.5)
-            fig.add_vline(x=0, line_dash="dash", line_color="#64748B", opacity=0.5)
+            fig = go.Figure()
+
+            # Individual funds as faded background dots
+            pensions = sorted(perf_data["pension_fund"].unique())
+            for i, pension in enumerate(pensions):
+                pdata = perf_data[perf_data["pension_fund"] == pension]
+                fig.add_trace(go.Scatter(
+                    x=pdata["net_irr"], y=pdata["net_multiple"],
+                    mode="markers",
+                    name=pension,
+                    marker=dict(color=PALETTE[i % len(PALETTE)], size=5, opacity=0.2),
+                    hovertemplate=(
+                        "<b>%{customdata[0]}</b><br>"
+                        "IRR: %{x:.1%} | Multiple: %{y:.2f}x<br>"
+                        "Vintage: %{customdata[1]}<extra>" + pension + "</extra>"
+                    ),
+                    customdata=pdata[["fund_name", "vintage_year"]].values,
+                    showlegend=False,
+                ))
+
+            # Pension system medians as large labeled markers
+            medians = perf_data.groupby("pension_fund").agg(
+                med_irr=("net_irr", "median"),
+                med_mult=("net_multiple", "median"),
+            ).reset_index().sort_values("pension_fund")
+
+            for _, row in medians.iterrows():
+                idx = pensions.index(row["pension_fund"])
+                fig.add_trace(go.Scatter(
+                    x=[row["med_irr"]], y=[row["med_mult"]],
+                    mode="markers+text",
+                    name=row["pension_fund"],
+                    text=[row["pension_fund"]],
+                    textposition="top center",
+                    marker=dict(
+                        color=PALETTE[idx % len(PALETTE)], size=14,
+                        line=dict(color="white", width=1.5),
+                    ),
+                    textfont=dict(size=9, color="#E2E8F0"),
+                    showlegend=True,
+                ))
+
+            plotly_dark_layout(fig, height=450,
+                              xaxis=dict(title="Net IRR", tickformat=".0%"),
+                              yaxis=dict(title="Net Multiple (TVPI)"))
+            fig.add_hline(y=1.0, line_dash="dash", line_color="#64748B", opacity=0.4,
+                         annotation_text="1.0x breakeven",
+                         annotation_position="bottom left",
+                         annotation_font=dict(size=8, color="#64748B"))
+            fig.add_vline(x=0, line_dash="dash", line_color="#64748B", opacity=0.4)
             st.plotly_chart(fig, use_container_width=True)
+            st.caption("Large markers = median IRR & multiple per pension system")
         else:
             st.info("Insufficient performance data for scatter plot.")
 
@@ -581,12 +613,13 @@ def main():
                 orientation="h",
                 marker_color=ACCENT_BLUE,
                 text=sp["avg_irr"].apply(lambda x: f"{x:.1%}" if pd.notna(x) else ""),
-                textposition="outside",
+                textposition="inside",
+                insidetextanchor="end",
+                textfont=dict(color="white"),
             ))
             plotly_dark_layout(fig, height=400, showlegend=False,
                               xaxis_title="Average Net IRR",
-                              xaxis=dict(tickformat=".0%"),
-                              margin=dict(l=40, r=80, t=40, b=40))
+                              xaxis=dict(tickformat=".0%"))
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("Insufficient strategy performance data.")
@@ -640,61 +673,132 @@ def main():
 
     st.markdown("")
 
-    # ── Top Funds Table ────────────────────────────────────────────────
-    section_header("Top 25 Funds by Total Commitment")
+    # ── Data Explorer ──────────────────────────────────────────────────
+    section_header("Data Explorer")
 
-    top_funds = fund_summary.head(25).copy()
-    top_funds["total_commitment_mm"] = top_funds["total_commitment_mm"].apply(fmt_dollars)
-    top_funds["avg_irr"] = top_funds["avg_irr"].apply(fmt_irr)
-    top_funds["avg_multiple"] = top_funds["avg_multiple"].apply(fmt_multiple)
-
-    st.dataframe(
-        top_funds[["fund_name", "general_partner", "sub_strategy", "vintage_year",
-                    "pension_count", "total_commitment_mm", "avg_irr", "avg_multiple"]],
-        column_config={
-            "fund_name": "Fund Name",
-            "general_partner": "GP",
-            "sub_strategy": "Strategy",
-            "vintage_year": "Vintage",
-            "pension_count": "Pensions",
-            "total_commitment_mm": "Total Commitment",
-            "avg_irr": "Avg Net IRR",
-            "avg_multiple": "Avg Net Multiple",
-        },
-        use_container_width=True,
-        hide_index=True,
+    table_view = st.selectbox(
+        "Select a view",
+        options=[
+            "Top 25 Funds by Total Commitment",
+            "Most Widely Held Funds (4+ Pension Systems)",
+            "GP Leaderboard — Top 25 by Commitment",
+            "Top Performing Funds (by Net IRR)",
+            "Top Performing GPs (by Avg Net IRR)",
+        ],
     )
 
-    st.markdown("")
-
-    # ── Most Widely Held Funds ────────────────────────────────────────
-    section_header("Most Widely Held Funds")
-    st.markdown(
-        '<p class="main-subtitle">'
-        'Funds committed to by 4 or more pension systems — consensus picks across major U.S. public pensions'
-        '</p>',
-        unsafe_allow_html=True,
-    )
-
-    widely_held = load_widely_held_funds()
-    if not widely_held.empty:
-        wh = widely_held.copy()
-        wh["total_commitment_mm"] = wh["total_commitment_mm"].apply(fmt_dollars)
-        wh["avg_irr"] = wh["avg_irr"].apply(fmt_irr)
-        wh["avg_multiple"] = wh["avg_multiple"].apply(fmt_multiple)
-
+    if table_view == "Top 25 Funds by Total Commitment":
+        top_funds = fund_summary.head(25).copy()
+        top_funds["total_commitment_mm"] = top_funds["total_commitment_mm"].apply(fmt_dollars)
+        top_funds["avg_irr"] = top_funds["avg_irr"].apply(fmt_irr)
+        top_funds["avg_multiple"] = top_funds["avg_multiple"].apply(fmt_multiple)
         st.dataframe(
-            wh[["fund_name", "general_partner", "sub_strategy", "vintage_year",
-                "pension_count", "total_commitment_mm", "avg_irr", "avg_multiple"]],
+            top_funds[["fund_name", "general_partner", "sub_strategy", "vintage_year",
+                        "pension_count", "total_commitment_mm", "avg_irr", "avg_multiple"]],
             column_config={
                 "fund_name": "Fund Name",
                 "general_partner": "GP",
                 "sub_strategy": "Strategy",
                 "vintage_year": "Vintage",
-                "pension_count": st.column_config.NumberColumn("Pension Systems", format="%d"),
+                "pension_count": "Pensions",
                 "total_commitment_mm": "Total Commitment",
                 "avg_irr": "Avg Net IRR",
                 "avg_multiple": "Avg Net Multiple",
+            },
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    elif table_view == "Most Widely Held Funds (4+ Pension Systems)":
+        widely_held = load_widely_held_funds()
+        if not widely_held.empty:
+            wh = widely_held.copy()
+            wh["total_commitment_mm"] = wh["total_commitment_mm"].apply(fmt_dollars)
+            wh["avg_irr"] = wh["avg_irr"].apply(fmt_irr)
+            wh["avg_multiple"] = wh["avg_multiple"].apply(fmt_multiple)
+            st.dataframe(
+                wh[["fund_name", "general_partner", "sub_strategy", "vintage_year",
+                    "pension_count", "total_commitment_mm", "avg_irr", "avg_multiple"]],
+                column_config={
+                    "fund_name": "Fund Name",
+                    "general_partner": "GP",
+                    "sub_strategy": "Strategy",
+                    "vintage_year": "Vintage",
+                    "pension_count": st.column_config.NumberColumn("Pension Systems", format="%d"),
+                    "total_commitment_mm": "Total Commitment",
+                    "avg_irr": "Avg Net IRR",
+                    "avg_multiple": "Avg Net Multiple",
+                },
+                use_container_width=True,
+                hide_index=True,
+            )
+
+    elif table_view == "GP Leaderboard — Top 25 by Commitment":
+        top_gps_table = gp_summary.head(25).copy()
+        top_gps_table["total_commitment_mm"] = top_gps_table["total_commitment_mm"].apply(fmt_dollars)
+        top_gps_table["avg_irr"] = top_gps_table["avg_irr"].apply(fmt_irr)
+        top_gps_table["avg_multiple"] = top_gps_table["avg_multiple"].apply(fmt_multiple)
+        st.dataframe(
+            top_gps_table[["general_partner", "fund_count", "pension_count",
+                            "total_commitment_mm", "avg_irr", "avg_multiple",
+                            "earliest_vintage", "latest_vintage"]],
+            column_config={
+                "general_partner": "General Partner",
+                "fund_count": "Funds",
+                "pension_count": "Pensions",
+                "total_commitment_mm": "Total Commitment",
+                "avg_irr": "Avg Net IRR",
+                "avg_multiple": "Avg Net Multiple",
+                "earliest_vintage": "Earliest Vintage",
+                "latest_vintage": "Latest Vintage",
+            },
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    elif table_view == "Top Performing Funds (by Net IRR)":
+        perf_funds = fund_summary.dropna(subset=["avg_irr"]).copy()
+        perf_funds = perf_funds.sort_values("avg_irr", ascending=False).head(25)
+        perf_funds["total_commitment_mm"] = perf_funds["total_commitment_mm"].apply(fmt_dollars)
+        perf_funds["avg_irr"] = perf_funds["avg_irr"].apply(fmt_irr)
+        perf_funds["avg_multiple"] = perf_funds["avg_multiple"].apply(fmt_multiple)
+        st.dataframe(
+            perf_funds[["fund_name", "general_partner", "sub_strategy", "vintage_year",
+                         "pension_count", "total_commitment_mm", "avg_irr", "avg_multiple"]],
+            column_config={
+                "fund_name": "Fund Name",
+                "general_partner": "GP",
+                "sub_strategy": "Strategy",
+                "vintage_year": "Vintage",
+                "pension_count": "Pensions",
+                "total_commitment_mm": "Total Commitment",
+                "avg_irr": "Avg Net IRR",
+                "avg_multiple": "Avg Net Multiple",
+            },
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    elif table_view == "Top Performing GPs (by Avg Net IRR)":
+        perf_gps = gp_summary.dropna(subset=["avg_irr"]).copy()
+        perf_gps = perf_gps[perf_gps["fund_count"] >= 2]
+        perf_gps = perf_gps.sort_values("avg_irr", ascending=False).head(25)
+        perf_gps["total_commitment_mm"] = perf_gps["total_commitment_mm"].apply(fmt_dollars)
+        perf_gps["avg_irr"] = perf_gps["avg_irr"].apply(fmt_irr)
+        perf_gps["avg_multiple"] = perf_gps["avg_multiple"].apply(fmt_multiple)
+        st.dataframe(
+            perf_gps[["general_partner", "fund_count", "pension_count",
+                       "total_commitment_mm", "avg_irr", "avg_multiple",
+                       "earliest_vintage", "latest_vintage"]],
+            column_config={
+                "general_partner": "General Partner",
+                "fund_count": "Funds",
+                "pension_count": "Pensions",
+                "total_commitment_mm": "Total Commitment",
+                "avg_irr": "Avg Net IRR",
+                "avg_multiple": "Avg Net Multiple",
+                "earliest_vintage": "Earliest Vintage",
+                "latest_vintage": "Latest Vintage",
             },
             use_container_width=True,
             hide_index=True,
@@ -706,8 +810,8 @@ def main():
     section_header("Cross-Pension Fund Comparison")
     st.markdown(
         '<p class="main-subtitle">'
-        'Funds committed to by multiple pension systems — see how the same fund '
-        'is reported across different LPs'
+        'Compare how the same fund is valued and reported across different pension systems — '
+        'the unique value of cross-referencing multiple LP disclosures'
         '</p>',
         unsafe_allow_html=True,
     )
@@ -717,45 +821,62 @@ def main():
     if cross_funds.empty:
         st.info("No funds found in multiple pension systems.")
     else:
-        col1, col2 = st.columns([1, 2])
+        # Summary metrics
+        c1, c2, c3, c4 = st.columns(4)
+        n_in_3 = len(cross_funds[cross_funds["pension_count"] >= 3])
+        n_in_4 = len(cross_funds[cross_funds["pension_count"] >= 4])
+        n_in_5 = len(cross_funds[cross_funds["pension_count"] >= 5])
+        c1.metric("In 2+ Systems", f"{len(cross_funds)}")
+        c2.metric("In 3+ Systems", f"{n_in_3}")
+        c3.metric("In 4+ Systems", f"{n_in_4}")
+        c4.metric("In All 5 Systems", f"{n_in_5}")
 
-        with col1:
-            st.write(f"**{len(cross_funds)}** funds appear in 2+ pension systems")
+        st.markdown("")
 
-            # Distribution chart
-            dist = cross_funds["pension_count"].value_counts().sort_index()
-            fig = go.Figure(go.Bar(
-                x=[f"{n} pensions" for n in dist.index],
-                y=dist.values,
-                marker_color=ACCENT_BLUE,
-                text=dist.values,
-                textposition="outside",
-                cliponaxis=False,
-            ))
-            plotly_dark_layout(fig, height=280, showlegend=False,
-                              yaxis_title="Number of Funds",
-                              margin=dict(l=40, r=20, t=50, b=40))
-            st.plotly_chart(fig, use_container_width=True)
+        # Fund selector
+        cross_fund_names = cross_funds["fund_name"].tolist()
+        selected_fund = st.selectbox(
+            "Select a fund to compare across pension systems",
+            options=cross_fund_names,
+            index=0,
+        )
 
-        with col2:
-            cross_fund_names = cross_funds["fund_name"].tolist()
-            selected_fund = st.selectbox(
-                "Select a fund for side-by-side comparison",
-                options=cross_fund_names,
-                index=0,
-            )
+        if selected_fund:
+            fund_data = df[df["fund_name"] == selected_fund].copy()
 
-            if selected_fund:
-                fund_data = df[df["fund_name"] == selected_fund].copy()
-                fund_data["commitment_mm"] = fund_data["commitment_mm"].apply(fmt_dollars)
-                fund_data["net_irr"] = fund_data["net_irr"].apply(fmt_irr)
-                fund_data["net_multiple"] = fund_data["net_multiple"].apply(fmt_multiple)
-                fund_data["capital_called_mm"] = fund_data["capital_called_mm"].apply(fmt_dollars)
-                fund_data["capital_distributed_mm"] = fund_data["capital_distributed_mm"].apply(fmt_dollars)
+            col1, col2 = st.columns([2, 3])
+
+            with col1:
+                # Visual commitment comparison bar chart
+                fig = go.Figure(go.Bar(
+                    y=fund_data["pension_fund"],
+                    x=fund_data["commitment_mm"],
+                    orientation="h",
+                    marker_color=ACCENT_BLUE,
+                    text=fund_data["commitment_mm"].apply(lambda x: f"${x:,.0f}M"),
+                    textposition="inside",
+                    insidetextanchor="end",
+                    textfont=dict(color="white"),
+                ))
+                plotly_dark_layout(fig, height=max(180, len(fund_data) * 50),
+                                  showlegend=False,
+                                  xaxis_title="Commitment ($M)",
+                                  margin=dict(l=40, r=20, t=10, b=40))
+                st.plotly_chart(fig, use_container_width=True)
+
+            with col2:
+                display_data = fund_data.copy()
+                display_data["commitment_mm"] = display_data["commitment_mm"].apply(fmt_dollars)
+                display_data["net_irr"] = display_data["net_irr"].apply(fmt_irr)
+                display_data["net_multiple"] = display_data["net_multiple"].apply(fmt_multiple)
+                display_data["capital_called_mm"] = display_data["capital_called_mm"].apply(fmt_dollars)
+                display_data["capital_distributed_mm"] = display_data["capital_distributed_mm"].apply(fmt_dollars)
+                display_data["remaining_value_mm"] = display_data["remaining_value_mm"].apply(fmt_dollars)
 
                 st.dataframe(
-                    fund_data[["pension_fund", "commitment_mm", "net_irr", "net_multiple",
-                               "capital_called_mm", "capital_distributed_mm", "as_of_date"]],
+                    display_data[["pension_fund", "commitment_mm", "net_irr", "net_multiple",
+                                  "capital_called_mm", "capital_distributed_mm",
+                                  "remaining_value_mm", "as_of_date"]],
                     column_config={
                         "pension_fund": "Pension System",
                         "commitment_mm": "Commitment",
@@ -763,39 +884,12 @@ def main():
                         "net_multiple": "Net Multiple",
                         "capital_called_mm": "Called",
                         "capital_distributed_mm": "Distributed",
+                        "remaining_value_mm": "Remaining",
                         "as_of_date": "As Of Date",
                     },
                     use_container_width=True,
                     hide_index=True,
                 )
-
-    st.markdown("")
-
-    # ── GP Leaderboard ─────────────────────────────────────────────────
-    section_header("GP Leaderboard — Top 25 by Total Commitment")
-
-    top_gps_table = gp_summary.head(25).copy()
-    top_gps_table["total_commitment_mm"] = top_gps_table["total_commitment_mm"].apply(fmt_dollars)
-    top_gps_table["avg_irr"] = top_gps_table["avg_irr"].apply(fmt_irr)
-    top_gps_table["avg_multiple"] = top_gps_table["avg_multiple"].apply(fmt_multiple)
-
-    st.dataframe(
-        top_gps_table[["general_partner", "fund_count", "pension_count",
-                        "total_commitment_mm", "avg_irr", "avg_multiple",
-                        "earliest_vintage", "latest_vintage"]],
-        column_config={
-            "general_partner": "General Partner",
-            "fund_count": "Funds",
-            "pension_count": "Pensions",
-            "total_commitment_mm": "Total Commitment",
-            "avg_irr": "Avg Net IRR",
-            "avg_multiple": "Avg Net Multiple",
-            "earliest_vintage": "Earliest Vintage",
-            "latest_vintage": "Latest Vintage",
-        },
-        use_container_width=True,
-        hide_index=True,
-    )
 
     # ── About / Methodology ───────────────────────────────────────────
     st.markdown("")
