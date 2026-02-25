@@ -493,69 +493,31 @@ def main():
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
-        section_header("Performance: IRR vs Net Multiple")
+        section_header("Net IRR Distribution by Pension System")
 
-        perf_data = df.dropna(subset=["net_irr", "net_multiple"]).copy()
-        perf_data = perf_data[
-            (perf_data["net_irr"].between(-0.5, 1.0)) &
-            (perf_data["net_multiple"].between(0, 5.0))
-        ]
+        perf_data = df.dropna(subset=["net_irr"]).copy()
+        perf_data = perf_data[perf_data["net_irr"].between(-0.5, 1.0)]
 
         if not perf_data.empty:
             fig = go.Figure()
-
-            # Individual funds as faded background dots
             pensions = sorted(perf_data["pension_fund"].unique())
             for i, pension in enumerate(pensions):
                 pdata = perf_data[perf_data["pension_fund"] == pension]
-                fig.add_trace(go.Scatter(
-                    x=pdata["net_irr"], y=pdata["net_multiple"],
-                    mode="markers",
+                fig.add_trace(go.Box(
+                    x=pdata["net_irr"],
                     name=pension,
-                    marker=dict(color=PALETTE[i % len(PALETTE)], size=5, opacity=0.2),
-                    hovertemplate=(
-                        "<b>%{customdata[0]}</b><br>"
-                        "IRR: %{x:.1%} | Multiple: %{y:.2f}x<br>"
-                        "Vintage: %{customdata[1]}<extra>" + pension + "</extra>"
-                    ),
-                    customdata=pdata[["fund_name", "vintage_year"]].values,
-                    showlegend=False,
+                    marker_color=PALETTE[i % len(PALETTE)],
+                    boxmean=True,
+                    hovertemplate="<b>" + pension + "</b><br>IRR: %{x:.1%}<extra></extra>",
                 ))
-
-            # Pension system medians as large labeled markers
-            medians = perf_data.groupby("pension_fund").agg(
-                med_irr=("net_irr", "median"),
-                med_mult=("net_multiple", "median"),
-            ).reset_index().sort_values("pension_fund")
-
-            for _, row in medians.iterrows():
-                idx = pensions.index(row["pension_fund"])
-                fig.add_trace(go.Scatter(
-                    x=[row["med_irr"]], y=[row["med_mult"]],
-                    mode="markers+text",
-                    name=row["pension_fund"],
-                    text=[row["pension_fund"]],
-                    textposition="top center",
-                    marker=dict(
-                        color=PALETTE[idx % len(PALETTE)], size=14,
-                        line=dict(color="white", width=1.5),
-                    ),
-                    textfont=dict(size=9, color="#E2E8F0"),
-                    showlegend=True,
-                ))
-
             plotly_dark_layout(fig, height=450,
                               xaxis=dict(title="Net IRR", tickformat=".0%"),
-                              yaxis=dict(title="Net Multiple (TVPI)"))
-            fig.add_hline(y=1.0, line_dash="dash", line_color="#64748B", opacity=0.4,
-                         annotation_text="1.0x breakeven",
-                         annotation_position="bottom left",
-                         annotation_font=dict(size=8, color="#64748B"))
+                              showlegend=False)
             fig.add_vline(x=0, line_dash="dash", line_color="#64748B", opacity=0.4)
             st.plotly_chart(fig, use_container_width=True)
-            st.caption("Large markers = median IRR & multiple per pension system")
+            st.caption("Box = IQR; line = median; diamond = mean")
         else:
-            st.info("Insufficient performance data for scatter plot.")
+            st.info("Insufficient performance data.")
 
     # ── Charts Row 3: Vintage Performance + Strategy Comparison ───────
     col1, col2 = st.columns(2)
@@ -623,6 +585,97 @@ def main():
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("Insufficient strategy performance data.")
+
+    st.markdown("")
+
+    # ── Cross-Pension Comparison ───────────────────────────────────────
+    section_header("Cross-Pension Fund Comparison")
+    st.markdown(
+        '<p class="main-subtitle">'
+        'Compare how the same fund is valued and reported across different pension systems — '
+        'the unique value of cross-referencing multiple LP disclosures'
+        '</p>',
+        unsafe_allow_html=True,
+    )
+
+    cross_funds = fund_summary[fund_summary["pension_count"] >= 2].copy()
+
+    if cross_funds.empty:
+        st.info("No funds found in multiple pension systems.")
+    else:
+        # Summary metrics
+        c1, c2, c3, c4 = st.columns(4)
+        n_in_3 = len(cross_funds[cross_funds["pension_count"] >= 3])
+        n_in_4 = len(cross_funds[cross_funds["pension_count"] >= 4])
+        n_in_5 = len(cross_funds[cross_funds["pension_count"] >= 5])
+        c1.metric("In 2+ Systems", f"{len(cross_funds)}")
+        c2.metric("In 3+ Systems", f"{n_in_3}")
+        c3.metric("In 4+ Systems", f"{n_in_4}")
+        c4.metric("In All 5 Systems", f"{n_in_5}")
+
+        st.markdown("")
+
+        # Fund selector
+        cross_fund_names = cross_funds["fund_name"].tolist()
+        selected_fund = st.selectbox(
+            "Select a fund to compare across pension systems",
+            options=cross_fund_names,
+            index=0,
+        )
+
+        if selected_fund:
+            fund_data = df[df["fund_name"] == selected_fund].copy()
+
+            # Aggregate by pension for the bar chart (avoids split bars from multiple records)
+            chart_agg = fund_data.groupby("pension_fund", as_index=False).agg(
+                total_commitment=("commitment_mm", "sum"),
+            )
+
+            col1, col2 = st.columns([2, 3])
+
+            with col1:
+                fig = go.Figure(go.Bar(
+                    y=chart_agg["pension_fund"],
+                    x=chart_agg["total_commitment"],
+                    orientation="h",
+                    marker_color=ACCENT_BLUE,
+                    text=chart_agg["total_commitment"].apply(lambda x: f"${x:,.0f}M"),
+                    textposition="inside",
+                    insidetextanchor="end",
+                    textfont=dict(color="white"),
+                ))
+                plotly_dark_layout(fig, height=max(180, len(chart_agg) * 50),
+                                  showlegend=False,
+                                  xaxis_title="Total Commitment ($M)",
+                                  margin=dict(l=40, r=20, t=10, b=40))
+                st.plotly_chart(fig, use_container_width=True)
+
+            with col2:
+                display_data = fund_data.copy()
+                display_data["commitment_mm"] = display_data["commitment_mm"].apply(fmt_dollars)
+                display_data["net_irr"] = display_data["net_irr"].apply(fmt_irr)
+                display_data["net_multiple"] = display_data["net_multiple"].apply(fmt_multiple)
+                display_data["capital_called_mm"] = display_data["capital_called_mm"].apply(fmt_dollars)
+                display_data["capital_distributed_mm"] = display_data["capital_distributed_mm"].apply(fmt_dollars)
+                display_data["remaining_value_mm"] = display_data["remaining_value_mm"].apply(fmt_dollars)
+
+                st.dataframe(
+                    display_data[["pension_fund", "commitment_mm", "net_irr", "net_multiple",
+                                  "capital_called_mm", "capital_distributed_mm",
+                                  "remaining_value_mm", "as_of_date"]],
+                    column_config={
+                        "pension_fund": "Pension System",
+                        "commitment_mm": "Commitment",
+                        "net_irr": "Net IRR",
+                        "net_multiple": "Net Multiple",
+                        "capital_called_mm": "Called",
+                        "capital_distributed_mm": "Distributed",
+                        "remaining_value_mm": "Remaining",
+                        "as_of_date": "As Of Date",
+                    },
+                    use_container_width=True,
+                    hide_index=True,
+                )
 
     st.markdown("")
 
@@ -805,91 +858,6 @@ def main():
         )
 
     st.markdown("")
-
-    # ── Cross-Pension Comparison ───────────────────────────────────────
-    section_header("Cross-Pension Fund Comparison")
-    st.markdown(
-        '<p class="main-subtitle">'
-        'Compare how the same fund is valued and reported across different pension systems — '
-        'the unique value of cross-referencing multiple LP disclosures'
-        '</p>',
-        unsafe_allow_html=True,
-    )
-
-    cross_funds = fund_summary[fund_summary["pension_count"] >= 2].copy()
-
-    if cross_funds.empty:
-        st.info("No funds found in multiple pension systems.")
-    else:
-        # Summary metrics
-        c1, c2, c3, c4 = st.columns(4)
-        n_in_3 = len(cross_funds[cross_funds["pension_count"] >= 3])
-        n_in_4 = len(cross_funds[cross_funds["pension_count"] >= 4])
-        n_in_5 = len(cross_funds[cross_funds["pension_count"] >= 5])
-        c1.metric("In 2+ Systems", f"{len(cross_funds)}")
-        c2.metric("In 3+ Systems", f"{n_in_3}")
-        c3.metric("In 4+ Systems", f"{n_in_4}")
-        c4.metric("In All 5 Systems", f"{n_in_5}")
-
-        st.markdown("")
-
-        # Fund selector
-        cross_fund_names = cross_funds["fund_name"].tolist()
-        selected_fund = st.selectbox(
-            "Select a fund to compare across pension systems",
-            options=cross_fund_names,
-            index=0,
-        )
-
-        if selected_fund:
-            fund_data = df[df["fund_name"] == selected_fund].copy()
-
-            col1, col2 = st.columns([2, 3])
-
-            with col1:
-                # Visual commitment comparison bar chart
-                fig = go.Figure(go.Bar(
-                    y=fund_data["pension_fund"],
-                    x=fund_data["commitment_mm"],
-                    orientation="h",
-                    marker_color=ACCENT_BLUE,
-                    text=fund_data["commitment_mm"].apply(lambda x: f"${x:,.0f}M"),
-                    textposition="inside",
-                    insidetextanchor="end",
-                    textfont=dict(color="white"),
-                ))
-                plotly_dark_layout(fig, height=max(180, len(fund_data) * 50),
-                                  showlegend=False,
-                                  xaxis_title="Commitment ($M)",
-                                  margin=dict(l=40, r=20, t=10, b=40))
-                st.plotly_chart(fig, use_container_width=True)
-
-            with col2:
-                display_data = fund_data.copy()
-                display_data["commitment_mm"] = display_data["commitment_mm"].apply(fmt_dollars)
-                display_data["net_irr"] = display_data["net_irr"].apply(fmt_irr)
-                display_data["net_multiple"] = display_data["net_multiple"].apply(fmt_multiple)
-                display_data["capital_called_mm"] = display_data["capital_called_mm"].apply(fmt_dollars)
-                display_data["capital_distributed_mm"] = display_data["capital_distributed_mm"].apply(fmt_dollars)
-                display_data["remaining_value_mm"] = display_data["remaining_value_mm"].apply(fmt_dollars)
-
-                st.dataframe(
-                    display_data[["pension_fund", "commitment_mm", "net_irr", "net_multiple",
-                                  "capital_called_mm", "capital_distributed_mm",
-                                  "remaining_value_mm", "as_of_date"]],
-                    column_config={
-                        "pension_fund": "Pension System",
-                        "commitment_mm": "Commitment",
-                        "net_irr": "Net IRR",
-                        "net_multiple": "Net Multiple",
-                        "capital_called_mm": "Called",
-                        "capital_distributed_mm": "Distributed",
-                        "remaining_value_mm": "Remaining",
-                        "as_of_date": "As Of Date",
-                    },
-                    use_container_width=True,
-                    hide_index=True,
-                )
 
     # ── About / Methodology ───────────────────────────────────────────
     st.markdown("")
