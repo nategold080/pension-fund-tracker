@@ -155,9 +155,10 @@ def plotly_dark_layout(fig, **kwargs):
 # ── Page layout ───────────────────────────────────────────────────────────
 
 def main():
+    favicon = Path(__file__).resolve().parent.parent / ".streamlit" / "favicon.png"
     st.set_page_config(
         page_title="Pension Fund Investment Tracker",
-        page_icon=":chart_with_upwards_trend:",
+        page_icon=str(favicon) if favicon.exists() else ":chart_with_upwards_trend:",
         layout="wide",
         initial_sidebar_state="collapsed",
     )
@@ -640,6 +641,10 @@ investment commitment data from public disclosures of major U.S. pension systems
         "Pension Fund Alternative Investment Tracker &bull; "
         "Data sourced from official public pension fund disclosures &bull; "
         "Deterministic extraction with provenance tracking"
+        "<br>"
+        "Built by <strong>Nathan Goldberg</strong> &nbsp;|&nbsp; "
+        "<a href='mailto:nathanmauricegoldberg@gmail.com' style='color: #0984E3; text-decoration: none;'>nathanmauricegoldberg@gmail.com</a> &nbsp;|&nbsp; "
+        "<a href='https://www.linkedin.com/in/nathan-goldberg-62a44522a' target='_blank' style='color: #0984E3; text-decoration: none;'>LinkedIn</a>"
         "</div>",
         unsafe_allow_html=True,
     )
