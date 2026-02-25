@@ -294,10 +294,10 @@ def render_board_intelligence():
         "<div style='background: #1B2A4A; border: 1px solid #334155; border-radius: 10px; "
         "padding: 20px 24px; margin-bottom: 1.2rem; line-height: 1.7;'>"
         "<span style='font-family: Inter, sans-serif; font-size: 0.95rem; color: #E2E8F0;'>"
-        "Our NLP pipeline extracts structured, forward-looking allocation signals from "
-        "public pension fund board meeting minutes — the kind of intelligence that is "
-        "buried across hundreds of pages of narratives, presentation slides, and formal "
-        "motions, and would otherwise require hours of manual review to surface. "
+        "Our hybrid extraction pipeline combines deterministic NLP with PageIndex tree RAG to surface "
+        "structured, forward-looking allocation signals from public pension fund board meeting minutes — "
+        "the kind of intelligence that is buried across hundreds of pages of narratives, presentation "
+        "slides, and formal motions, and would otherwise require hours of manual review to surface. "
         "Below are live extractions from recent board meetings."
         "</span></div>",
         unsafe_allow_html=True,
@@ -375,11 +375,23 @@ def render_board_intelligence():
     # Investment commitments
     for c in m.get("investment_commitments", []):
         rel = f" ({c['gp_relationship']})" if c.get("gp_relationship") else ""
+        detail_lines = [
+            f"{c['strategy']} &nbsp;&bull;&nbsp; {c['gp']}{rel}"
+            + (f" &nbsp;&bull;&nbsp; {c['vote']}" if c.get("vote") else ""),
+        ]
+        if c.get("context"):
+            detail_lines.append(f"<em>{c['context']}</em>")
+        extra_parts = []
+        if c.get("fund_target_mm"):
+            extra_parts.append(f"Fund target: ${c['fund_target_mm']:,.0f}M")
+        if c.get("sector_focus"):
+            extra_parts.append(f"Focus: {c['sector_focus']}")
+        if extra_parts:
+            detail_lines.append(" &nbsp;&bull;&nbsp; ".join(extra_parts))
         _board_card(
             ACCENT_BLUE, "Commitment Approved",
             f"${c['amount_mm']:,.0f}M \u2192 {c['fund']}",
-            f"{c['strategy']} &nbsp;&bull;&nbsp; {c['gp']}{rel}"
-            + (f" &nbsp;&bull;&nbsp; {c['vote']}" if c.get("vote") else ""),
+            "<br>".join(detail_lines),
         )
 
     # Dissent
@@ -467,13 +479,16 @@ def render_board_intelligence():
 
         with col2:
             st.markdown("**Pipeline Performance**")
-            for label, value in [
+            stat_items = [
                 ("Avg. events per meeting", stats["avg_events_per_meeting"]),
                 ("Commitment extraction accuracy", stats["commitment_accuracy"]),
                 ("False positive rate", stats["false_positive_rate"]),
                 ("Forward-looking signals per meeting", stats["signals_per_meeting"]),
                 ("Processing time per document", stats["processing_time"]),
-            ]:
+            ]
+            if stats.get("enrichment_method"):
+                stat_items.append(("Enrichment method", stats["enrichment_method"]))
+            for label, value in stat_items:
                 st.markdown(
                     f"<div style='display: flex; justify-content: space-between; "
                     f"padding: 8px 0; border-bottom: 1px solid #334155;'>"
@@ -489,12 +504,14 @@ def render_board_intelligence():
             "<div style='background: #1B2A4A; border: 1px solid #334155; border-radius: 10px; "
             "padding: 16px 20px; line-height: 1.7;'>"
             "<span style='font-family: Inter, sans-serif; font-size: 0.88rem; color: #E2E8F0;'>"
-            "<strong>Extraction methodology:</strong> All extraction is deterministic and rule-based. "
-            "Regex pattern matching identifies structured events (commitments, motions, elections) "
-            "and spaCy NER tags entities (organizations, dollar amounts, personnel). "
-            "No LLM is used for primary extraction, ensuring reproducibility, auditability, "
-            "and zero hallucination risk. Every data point includes its source document, page number, "
-            "section header, and the extraction pattern that matched."
+            "<strong>Extraction methodology:</strong> Two-stage hybrid pipeline. "
+            "<strong>Stage 1 (deterministic):</strong> Regex pattern matching identifies structured events "
+            "(commitments, motions, elections) and spaCy NER tags entities (organizations, dollar amounts, personnel). "
+            "These facts are reproducible, auditable, and carry zero hallucination risk. "
+            "<strong>Stage 2 (PageIndex tree RAG):</strong> Qualitative enrichment layer extracts investment theses, "
+            "dissent rationale, forward-looking signals, and contextual detail from unstructured narrative sections. "
+            "Stage 1 facts are never overridden by Stage 2. Every data point includes its source document, "
+            "page number, section header, and the extraction pattern or retrieval path that produced it."
             "</span></div>",
             unsafe_allow_html=True,
         )

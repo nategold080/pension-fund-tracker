@@ -16,4 +16,5 @@ venv/
 data/cache/
 data/logs/
 data/exports/
+data/pageindex/
 .claude/
