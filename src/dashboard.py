@@ -493,29 +493,33 @@ def main():
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
-        section_header("Net IRR Distribution by Pension System")
+        section_header("Median Net IRR by Pension System")
 
         perf_data = df.dropna(subset=["net_irr"]).copy()
         perf_data = perf_data[perf_data["net_irr"].between(-0.5, 1.0)]
 
         if not perf_data.empty:
-            fig = go.Figure()
-            pensions = sorted(perf_data["pension_fund"].unique())
-            for i, pension in enumerate(pensions):
-                pdata = perf_data[perf_data["pension_fund"] == pension]
-                fig.add_trace(go.Box(
-                    x=pdata["net_irr"],
-                    name=pension,
-                    marker_color=PALETTE[i % len(PALETTE)],
-                    boxmean=True,
-                    hovertemplate="<b>" + pension + "</b><br>IRR: %{x:.1%}<extra></extra>",
-                ))
-            plotly_dark_layout(fig, height=450,
-                              xaxis=dict(title="Net IRR", tickformat=".0%"),
-                              showlegend=False)
-            fig.add_vline(x=0, line_dash="dash", line_color="#64748B", opacity=0.4)
+            irr_stats = perf_data.groupby("pension_fund").agg(
+                median_irr=("net_irr", "median"),
+                fund_count=("net_irr", "count"),
+            ).reset_index().sort_values("median_irr", ascending=True)
+
+            fig = go.Figure(go.Bar(
+                y=irr_stats["pension_fund"],
+                x=irr_stats["median_irr"],
+                orientation="h",
+                marker_color=ACCENT_BLUE,
+                text=irr_stats.apply(
+                    lambda r: f"{r['median_irr']:.1%}  ({int(r['fund_count'])} funds)", axis=1),
+                textposition="inside",
+                insidetextanchor="end",
+                textfont=dict(color="white", size=12),
+                hovertemplate="<b>%{y}</b><br>Median Net IRR: %{x:.1%}<extra></extra>",
+            ))
+            plotly_dark_layout(fig, height=350, showlegend=False,
+                              xaxis=dict(title="Median Net IRR", tickformat=".0%"))
             st.plotly_chart(fig, use_container_width=True)
-            st.caption("Box = IQR; line = median; diamond = mean")
+            st.caption("NY Common excluded — does not disclose IRR")
         else:
             st.info("Insufficient performance data.")
 
@@ -626,27 +630,36 @@ def main():
         if selected_fund:
             fund_data = df[df["fund_name"] == selected_fund].copy()
 
-            # Aggregate by pension for the bar chart (avoids split bars from multiple records)
-            chart_agg = fund_data.groupby("pension_fund", as_index=False).agg(
-                total_commitment=("commitment_mm", "sum"),
+            # Deduplicate: take latest as_of_date per pension+vintage combo
+            deduped = fund_data.sort_values("as_of_date").groupby(
+                ["pension_fund", "vintage_year"], as_index=False
+            ).last()
+
+            # Build bar labels: add year only when a pension has multiple vintages
+            pension_vy_count = deduped.groupby("pension_fund")["vintage_year"].nunique()
+            deduped["bar_label"] = deduped.apply(
+                lambda r: (f"{r['pension_fund']} ({int(r['vintage_year'])})"
+                           if pd.notna(r["vintage_year"]) and pension_vy_count.get(r["pension_fund"], 1) > 1
+                           else r["pension_fund"]),
+                axis=1,
             )
 
             col1, col2 = st.columns([2, 3])
 
             with col1:
                 fig = go.Figure(go.Bar(
-                    y=chart_agg["pension_fund"],
-                    x=chart_agg["total_commitment"],
+                    y=deduped["bar_label"],
+                    x=deduped["commitment_mm"],
                     orientation="h",
                     marker_color=ACCENT_BLUE,
-                    text=chart_agg["total_commitment"].apply(lambda x: f"${x:,.0f}M"),
+                    text=deduped["commitment_mm"].apply(lambda x: f"${x:,.0f}M"),
                     textposition="inside",
                     insidetextanchor="end",
                     textfont=dict(color="white"),
                 ))
-                plotly_dark_layout(fig, height=max(180, len(chart_agg) * 50),
+                plotly_dark_layout(fig, height=max(180, len(deduped) * 50),
                                   showlegend=False,
-                                  xaxis_title="Total Commitment ($M)",
+                                  xaxis_title="Commitment ($M)",
                                   margin=dict(l=40, r=20, t=10, b=40))
                 st.plotly_chart(fig, use_container_width=True)
 
