@@ -111,6 +111,73 @@ def load_pension_summary():
     """, conn)
 
 
+@st.cache_data(ttl=300)
+def load_capital_flows():
+    conn = get_connection()
+    return pd.read_sql_query("""
+        SELECT p.name as pension_fund,
+               SUM(c.capital_called_mm) as total_called,
+               SUM(c.capital_distributed_mm) as total_distributed,
+               SUM(c.remaining_value_mm) as total_remaining
+        FROM commitments c
+        JOIN pension_funds p ON c.pension_fund_id = p.id
+        GROUP BY p.id
+        ORDER BY total_called DESC
+    """, conn)
+
+
+@st.cache_data(ttl=300)
+def load_vintage_performance():
+    conn = get_connection()
+    return pd.read_sql_query("""
+        SELECT c.vintage_year,
+               COUNT(*) as fund_count,
+               AVG(c.net_irr) as avg_irr,
+               AVG(c.net_multiple) as avg_multiple,
+               SUM(c.commitment_mm) as total_commitment_mm
+        FROM commitments c
+        WHERE c.vintage_year IS NOT NULL AND c.vintage_year >= 1995
+        GROUP BY c.vintage_year
+        HAVING COUNT(*) >= 5
+        ORDER BY c.vintage_year
+    """, conn)
+
+
+@st.cache_data(ttl=300)
+def load_widely_held_funds():
+    conn = get_connection()
+    return pd.read_sql_query("""
+        SELECT f.fund_name, f.general_partner, f.vintage_year, f.sub_strategy,
+               COUNT(DISTINCT c.pension_fund_id) as pension_count,
+               SUM(c.commitment_mm) as total_commitment_mm,
+               AVG(c.net_irr) as avg_irr,
+               AVG(c.net_multiple) as avg_multiple
+        FROM funds f
+        JOIN commitments c ON f.id = c.fund_id
+        GROUP BY f.id
+        HAVING COUNT(DISTINCT c.pension_fund_id) >= 4
+        ORDER BY pension_count DESC, total_commitment_mm DESC
+    """, conn)
+
+
+@st.cache_data(ttl=300)
+def load_strategy_performance():
+    conn = get_connection()
+    return pd.read_sql_query("""
+        SELECT f.sub_strategy,
+               COUNT(*) as fund_count,
+               SUM(c.commitment_mm) as total_commitment_mm,
+               AVG(c.net_irr) as avg_irr,
+               AVG(c.net_multiple) as avg_multiple
+        FROM commitments c
+        JOIN funds f ON c.fund_id = f.id
+        WHERE f.sub_strategy IS NOT NULL AND f.sub_strategy != ''
+        GROUP BY f.sub_strategy
+        HAVING COUNT(*) >= 10
+        ORDER BY total_commitment_mm DESC
+    """, conn)
+
+
 # ── Helpers ───────────────────────────────────────────────────────────────
 
 def fmt_dollars(val, unit="M"):
@@ -313,6 +380,48 @@ def main():
 
     st.markdown("")
 
+    # ── Capital Flow Analysis ─────────────────────────────────────────
+    section_header("Capital Flow by Pension System")
+
+    capital_flows = load_capital_flows()
+    if not capital_flows.empty:
+        cf = capital_flows.copy()
+        for c in ["total_called", "total_distributed", "total_remaining"]:
+            cf[c] = cf[c] / 1000.0
+
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            y=cf["pension_fund"], x=cf["total_called"],
+            name="Capital Called",
+            orientation="h",
+            marker_color="#0984E3",
+            text=cf["total_called"].apply(lambda x: f"${x:.0f}B"),
+            textposition="auto",
+        ))
+        fig.add_trace(go.Bar(
+            y=cf["pension_fund"], x=cf["total_distributed"],
+            name="Capital Distributed",
+            orientation="h",
+            marker_color="#00B894",
+            text=cf["total_distributed"].apply(lambda x: f"${x:.0f}B"),
+            textposition="auto",
+        ))
+        fig.add_trace(go.Bar(
+            y=cf["pension_fund"], x=cf["total_remaining"],
+            name="Remaining Value (NAV)",
+            orientation="h",
+            marker_color="#6C5CE7",
+            text=cf["total_remaining"].apply(lambda x: f"${x:.0f}B"),
+            textposition="auto",
+        ))
+        plotly_dark_layout(fig, height=320, barmode="group",
+                          xaxis_title="Amount ($B)",
+                          legend=dict(orientation="h", yanchor="bottom", y=1.02,
+                                      xanchor="center", x=0.5))
+        st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("")
+
     # ── Charts Row 1: Vintage + Strategy ──────────────────────────────
     col1, col2 = st.columns(2)
 
@@ -380,7 +489,8 @@ def main():
         ))
         plotly_dark_layout(fig, height=450, showlegend=False,
                           xaxis_title="Total Commitments ($B)",
-                          yaxis=dict(autorange="reversed"))
+                          yaxis=dict(autorange="reversed"),
+                          margin=dict(l=40, r=100, t=40, b=40))
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -395,6 +505,7 @@ def main():
         if not perf_data.empty:
             fig = px.scatter(
                 perf_data, x="net_irr", y="net_multiple",
+                render_mode="svg",
                 color="pension_fund",
                 size="commitment_mm",
                 size_max=15,
@@ -415,6 +526,74 @@ def main():
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("Insufficient performance data for scatter plot.")
+
+    # ── Charts Row 3: Vintage Performance + Strategy Comparison ───────
+    col1, col2 = st.columns(2)
+
+    with col1:
+        section_header("Performance by Vintage Year")
+
+        vintage_perf = load_vintage_performance()
+        vp = vintage_perf.dropna(subset=["avg_irr"]).copy()
+
+        if not vp.empty:
+            vp["vintage_year"] = vp["vintage_year"].astype(int)
+
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=vp["vintage_year"], y=vp["avg_irr"],
+                mode="lines+markers",
+                name="Avg Net IRR",
+                line=dict(color="#0984E3", width=2),
+                marker=dict(size=6),
+                yaxis="y",
+                hovertemplate="Vintage %{x}<br>Avg IRR: %{y:.1%}<extra></extra>",
+            ))
+            fig.add_trace(go.Scatter(
+                x=vp["vintage_year"], y=vp["avg_multiple"],
+                mode="lines+markers",
+                name="Avg Net Multiple",
+                line=dict(color="#00B894", width=2),
+                marker=dict(size=6),
+                yaxis="y2",
+                hovertemplate="Vintage %{x}<br>Avg Multiple: %{y:.2f}x<extra></extra>",
+            ))
+            plotly_dark_layout(fig, height=400,
+                              xaxis_title="Vintage Year",
+                              yaxis=dict(title="Avg Net IRR", tickformat=".0%", side="left"),
+                              yaxis2=dict(title="Avg Net Multiple", overlaying="y",
+                                          side="right", tickformat=".2f"),
+                              legend=dict(orientation="h", yanchor="bottom", y=1.02,
+                                          xanchor="center", x=0.5))
+            fig.add_hline(y=0, line_dash="dash", line_color="#64748B", opacity=0.3)
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Insufficient vintage performance data.")
+
+    with col2:
+        section_header("Average IRR by Strategy")
+
+        strat_perf = load_strategy_performance()
+        if not strat_perf.empty:
+            sp = strat_perf.dropna(subset=["avg_irr"]).head(10).copy()
+            sp = sp.sort_values("avg_irr", ascending=True)
+
+            fig = go.Figure(go.Bar(
+                y=sp["sub_strategy"], x=sp["avg_irr"],
+                orientation="h",
+                marker_color=ACCENT_BLUE,
+                text=sp["avg_irr"].apply(lambda x: f"{x:.1%}" if pd.notna(x) else ""),
+                textposition="outside",
+            ))
+            plotly_dark_layout(fig, height=400, showlegend=False,
+                              xaxis_title="Average Net IRR",
+                              xaxis=dict(tickformat=".0%"),
+                              margin=dict(l=40, r=80, t=40, b=40))
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Insufficient strategy performance data.")
+
+    st.markdown("")
 
     # ── Fund Search ────────────────────────────────────────────────────
     section_header("Fund & GP Search")
@@ -490,6 +669,41 @@ def main():
 
     st.markdown("")
 
+    # ── Most Widely Held Funds ────────────────────────────────────────
+    section_header("Most Widely Held Funds")
+    st.markdown(
+        '<p class="main-subtitle">'
+        'Funds committed to by 4 or more pension systems — consensus picks across major U.S. public pensions'
+        '</p>',
+        unsafe_allow_html=True,
+    )
+
+    widely_held = load_widely_held_funds()
+    if not widely_held.empty:
+        wh = widely_held.copy()
+        wh["total_commitment_mm"] = wh["total_commitment_mm"].apply(fmt_dollars)
+        wh["avg_irr"] = wh["avg_irr"].apply(fmt_irr)
+        wh["avg_multiple"] = wh["avg_multiple"].apply(fmt_multiple)
+
+        st.dataframe(
+            wh[["fund_name", "general_partner", "sub_strategy", "vintage_year",
+                "pension_count", "total_commitment_mm", "avg_irr", "avg_multiple"]],
+            column_config={
+                "fund_name": "Fund Name",
+                "general_partner": "GP",
+                "sub_strategy": "Strategy",
+                "vintage_year": "Vintage",
+                "pension_count": st.column_config.NumberColumn("Pension Systems", format="%d"),
+                "total_commitment_mm": "Total Commitment",
+                "avg_irr": "Avg Net IRR",
+                "avg_multiple": "Avg Net Multiple",
+            },
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    st.markdown("")
+
     # ── Cross-Pension Comparison ───────────────────────────────────────
     section_header("Cross-Pension Fund Comparison")
     st.markdown(
@@ -518,9 +732,11 @@ def main():
                 marker_color=ACCENT_BLUE,
                 text=dist.values,
                 textposition="outside",
+                cliponaxis=False,
             ))
-            plotly_dark_layout(fig, height=250, showlegend=False,
-                              yaxis_title="Number of Funds")
+            plotly_dark_layout(fig, height=280, showlegend=False,
+                              yaxis_title="Number of Funds",
+                              margin=dict(l=40, r=20, t=50, b=40))
             st.plotly_chart(fig, use_container_width=True)
 
         with col2:
