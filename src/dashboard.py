@@ -254,10 +254,10 @@ def main():
         margin-bottom: 1.2rem;
     }
 
-    /* KPI cards */
+    /* KPI cards — dark theme */
     [data-testid="stMetric"] {
-        background: #F8FAFC;
-        border: 1px solid #E2E8F0;
+        background: #1B2A4A;
+        border: 1px solid #334155;
         border-radius: 10px;
         padding: 16px 20px;
     }
@@ -265,7 +265,7 @@ def main():
         font-family: 'Inter', sans-serif;
         font-size: 0.8rem !important;
         font-weight: 500;
-        color: #64748B !important;
+        color: #94A3B8 !important;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
@@ -273,7 +273,7 @@ def main():
         font-family: 'Inter', sans-serif;
         font-size: 1.8rem !important;
         font-weight: 700;
-        color: #1B2A4A !important;
+        color: #E2E8F0 !important;
     }
 
     /* Section headers */
@@ -331,7 +331,7 @@ def main():
         "padding: 20px 24px; margin-bottom: 1.2rem; line-height: 1.7;'>"
         "<span style='font-family: Inter, sans-serif; font-size: 0.95rem; color: #E2E8F0;'>"
         "This dashboard aggregates alternative investment commitment data from public disclosures "
-        "of major U.S. pension systems — cross-referencing how the same private equity and venture "
+        "of major U.S. pension systems, cross-referencing how the same private equity and venture "
         "capital funds are valued across different institutional investors. "
         "The current dataset covers <strong>5 pension systems</strong> and serves as a "
         "<strong>proof of concept</strong> for a comprehensive cross-pension analytics platform. "
