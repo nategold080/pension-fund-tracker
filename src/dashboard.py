@@ -269,13 +269,9 @@ def render_board_intelligence():
     stats = data["pipeline_stats"]
     coverage = data["coverage"]
 
-    # Compute aggregate KPIs
-    total_events = sum(m["events_extracted"] for m in meetings)
-    total_commit_mm = sum(
-        sum(c["amount_mm"] for c in m["investment_commitments"])
-        for m in meetings
-    )
-    unique_pensions = len({m["pension_short"] for m in meetings})
+    # Reorder: WSIB Nov first, then WSIB Sep, then Oregon
+    display_order = [1, 0, 2]
+    ordered_meetings = [meetings[i] for i in display_order]
 
     # ── Overview blurb ────────────────────────────────────────────────
     st.markdown(
@@ -285,128 +281,160 @@ def render_board_intelligence():
         "Our NLP pipeline extracts structured, forward-looking allocation signals from "
         "public pension fund board meeting minutes. Using deterministic regex pattern "
         "matching and spaCy named entity recognition, we process 100+ page PDFs in under "
-        "30 seconds, extracting investment commitments, personnel changes, policy shifts, "
+        "30 seconds — extracting investment commitments, personnel changes, policy shifts, "
         "and strategic direction changes with full provenance tracking and zero "
-        "hallucination risk."
+        "hallucination risk. Below are live extractions from three recent board meetings."
         "</span></div>",
         unsafe_allow_html=True,
     )
 
-    # ── KPI Row ───────────────────────────────────────────────────────
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Meetings Processed", f"{len(meetings)}")
-    c2.metric("Events Extracted", f"{total_events}")
-    c3.metric("Commitments Identified", f"${total_commit_mm / 1000:.1f}B")
-    c4.metric("Pension Systems", f"{unique_pensions}")
+    # ── Meeting selector ──────────────────────────────────────────────
+    meeting_labels = [
+        f"{m['pension_system']} — {m['meeting_date']}"
+        for m in ordered_meetings
+    ]
+    selected_label = st.radio(
+        "Select a board meeting to review",
+        options=meeting_labels,
+        index=0,
+        horizontal=True,
+        label_visibility="collapsed",
+    )
+    m = ordered_meetings[meeting_labels.index(selected_label)]
 
-    st.markdown("")
+    # ── Meeting banner ────────────────────────────────────────────────
+    commit_total = sum(c["amount_mm"] for c in m["investment_commitments"])
+    st.markdown(
+        f"<div style='background: linear-gradient(135deg, #162240, #1B2A4A); "
+        f"border: 1px solid #334155; border-radius: 10px; "
+        f"padding: 20px 28px; margin: 0.8rem 0 1.2rem 0;'>"
+        f"<div style='display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;'>"
+        f"<div>"
+        f"<span style='font-family: Inter, sans-serif; font-size: 1.4rem; font-weight: 700; "
+        f"color: #FFFFFF;'>{m['pension_system']}</span><br>"
+        f"<span style='font-family: Inter, sans-serif; font-size: 0.95rem; "
+        f"color: #94A3B8;'>{m['meeting_date']} &nbsp;&bull;&nbsp; "
+        f"{m['document']} ({m['pages']} pages)</span>"
+        f"</div>"
+        f"<div style='display: flex; gap: 32px;'>"
+        f"<div style='text-align: center;'>"
+        f"<span style='font-family: Inter, sans-serif; font-size: 1.6rem; font-weight: 700; "
+        f"color: {ACCENT_BLUE};'>{m['events_extracted']}</span><br>"
+        f"<span style='font-family: Inter, sans-serif; font-size: 0.75rem; color: #94A3B8; "
+        f"text-transform: uppercase; letter-spacing: 0.05em;'>Events</span></div>"
+        f"<div style='text-align: center;'>"
+        f"<span style='font-family: Inter, sans-serif; font-size: 1.6rem; font-weight: 700; "
+        f"color: {ACCENT_BLUE};'>${commit_total:,.0f}M</span><br>"
+        f"<span style='font-family: Inter, sans-serif; font-size: 0.75rem; color: #94A3B8; "
+        f"text-transform: uppercase; letter-spacing: 0.05em;'>Commitments</span></div>"
+        f"</div></div></div>",
+        unsafe_allow_html=True,
+    )
 
-    # ── Commitments chart across all meetings ─────────────────────────
-    section_header("Investment Commitments Extracted from Board Minutes")
+    # ── Strategic allocation change (WSIB Nov highlight) ──────────────
+    if m.get("strategic_allocation_change"):
+        saa = m["strategic_allocation_change"]
+        section_header("Strategic Asset Allocation Change")
+        st.markdown(
+            f"<div style='background: #162240; border-left: 4px solid #E17055; "
+            f"padding: 14px 18px; border-radius: 0 8px 8px 0; margin-bottom: 14px;'>"
+            f"<span style='font-family: Inter, sans-serif; font-size: 0.95rem; "
+            f"color: #E2E8F0; line-height: 1.6;'>{saa['description']}</span></div>",
+            unsafe_allow_html=True,
+        )
 
-    all_commits = []
-    for m in meetings:
-        for c in m["investment_commitments"]:
-            all_commits.append({
-                "fund": c["fund"],
-                "amount_mm": c["amount_mm"],
-                "gp": c["gp"],
-                "strategy": c["strategy"],
-                "meeting": f"{m['pension_short']} — {m['meeting_date']}",
-                "pension": m["pension_short"],
-            })
+        saa_df = pd.DataFrame(saa["changes"])
+        st.dataframe(
+            saa_df,
+            column_config={
+                "asset_class": "Asset Class",
+                "prior": "Prior Target",
+                "new": "New Target",
+                "range": "Policy Range",
+                "change": "Change",
+            },
+            use_container_width=True,
+            hide_index=True,
+        )
+        st.markdown("")
 
-    if all_commits:
-        commit_df = pd.DataFrame(all_commits).sort_values("amount_mm", ascending=True)
+    # ── Investment commitments ────────────────────────────────────────
+    if m["investment_commitments"]:
+        n_commits = len(m["investment_commitments"])
+        section_header(f"Investment Commitments ({n_commits})")
 
-        fig = go.Figure(go.Bar(
-            y=commit_df["fund"],
-            x=commit_df["amount_mm"],
-            orientation="h",
-            marker_color=[
-                PALETTE[0] if p == "WSIB" else PALETTE[2]
-                for p in commit_df["pension"]
-            ],
-            text=commit_df.apply(
-                lambda r: f"${r['amount_mm']:,.0f}M — {r['gp']}", axis=1),
-            textposition="inside",
-            insidetextanchor="end",
-            textfont=dict(color="white", size=11),
-            customdata=commit_df[["gp", "strategy", "meeting"]],
-            hovertemplate=(
-                "<b>%{y}</b><br>"
-                "Amount: $%{x:,.0f}M<br>"
-                "GP: %{customdata[0]}<br>"
-                "Strategy: %{customdata[1]}<br>"
-                "Source: %{customdata[2]}"
-                "<extra></extra>"
-            ),
-        ))
-        plotly_dark_layout(fig, height=max(350, len(all_commits) * 35),
-                          showlegend=False,
-                          xaxis_title="Commitment Amount ($M)",
-                          margin=dict(l=40, r=20, t=10, b=40))
-        st.plotly_chart(fig, use_container_width=True)
+        col1, col2 = st.columns([2, 3])
 
-    st.markdown("")
+        with col1:
+            ic_chart = pd.DataFrame(m["investment_commitments"]).sort_values(
+                "amount_mm", ascending=True)
+            fig = go.Figure(go.Bar(
+                y=ic_chart["fund"],
+                x=ic_chart["amount_mm"],
+                orientation="h",
+                marker_color=ACCENT_BLUE,
+                text=ic_chart.apply(
+                    lambda r: f"${r['amount_mm']:,.0f}M — {r['gp']}", axis=1),
+                textposition="inside",
+                insidetextanchor="end",
+                textfont=dict(color="white", size=11),
+                hovertemplate="<b>%{y}</b><br>$%{x:,.0f}M<extra></extra>",
+            ))
+            plotly_dark_layout(fig, height=max(200, n_commits * 38),
+                              showlegend=False,
+                              xaxis_title="Amount ($M)",
+                              margin=dict(l=40, r=20, t=10, b=40))
+            st.plotly_chart(fig, use_container_width=True)
 
-    # ── Meeting-by-meeting detail ─────────────────────────────────────
-    section_header("Meeting-by-Meeting Extraction")
+        with col2:
+            ic_df = pd.DataFrame(m["investment_commitments"])
+            ic_df["amount_mm"] = ic_df["amount_mm"].apply(lambda x: f"${x:,.0f}M")
+            display_cols = {"fund": "Fund", "amount_mm": "Amount",
+                            "strategy": "Strategy", "gp": "GP"}
+            # Only show GP relationship if any exist
+            if any(c.get("gp_relationship") for c in m["investment_commitments"]):
+                display_cols["gp_relationship"] = "GP Relationship"
+            display_cols["vote"] = "Vote"
+            st.dataframe(
+                ic_df[list(display_cols.keys())],
+                column_config=display_cols,
+                use_container_width=True,
+                hide_index=True,
+            )
+        st.markdown("")
 
-    for idx, m in enumerate(meetings):
-        meeting_label = f"{m['pension_system']} — {m['meeting_date']}"
-        with st.expander(meeting_label, expanded=(idx == 0)):
-            # Meeting header
-            mc1, mc2, mc3, mc4 = st.columns(4)
-            mc1.metric("Document", m["document"])
-            mc2.metric("Pages", f"{m['pages']}")
-            mc3.metric("Events Extracted", f"{m['events_extracted']}")
-            commit_total = sum(c["amount_mm"] for c in m["investment_commitments"])
-            mc4.metric("Commitments", f"${commit_total:,.0f}M")
+    # ── Dissent (show prominently before other items) ─────────────────
+    if m.get("dissent"):
+        section_header("Dissenting Statements")
+        for d in m["dissent"]:
+            st.markdown(
+                f"<div style='background: #2d1a1a; border: 1px solid #5a2d2d; "
+                f"border-left: 4px solid #FF7675; "
+                f"padding: 16px 20px; border-radius: 0 8px 8px 0; margin-bottom: 10px;'>"
+                f"<span style='font-family: Inter, sans-serif; font-weight: 700; "
+                f"font-size: 1rem; color: #FF7675;'>{d['person']}</span>"
+                f"<span style='font-family: Inter, sans-serif; font-size: 0.85rem; "
+                f"color: #94A3B8;'> &nbsp;&bull;&nbsp; {d['topic']}</span><br>"
+                f"<span style='font-family: Inter, sans-serif; font-size: 0.9rem; "
+                f"color: #E2E8F0; line-height: 1.6;'>{d['detail']}</span><br>"
+                f"<span style='font-family: Inter, sans-serif; font-size: 0.85rem; "
+                f"font-weight: 600; color: #94A3B8; margin-top: 6px; display: inline-block;'>"
+                f"Outcome: {d['outcome']}</span></div>",
+                unsafe_allow_html=True,
+            )
+        st.markdown("")
 
-            # Investment commitments table
-            if m["investment_commitments"]:
-                st.markdown("**Investment Commitments**")
-                ic_df = pd.DataFrame(m["investment_commitments"])
-                ic_df["amount_mm"] = ic_df["amount_mm"].apply(lambda x: f"${x:,.0f}M")
-                display_cols = {"fund": "Fund", "amount_mm": "Amount",
-                                "strategy": "Strategy", "gp": "GP",
-                                "gp_relationship": "GP Relationship", "vote": "Vote"}
-                st.dataframe(
-                    ic_df[list(display_cols.keys())],
-                    column_config=display_cols,
-                    use_container_width=True,
-                    hide_index=True,
-                )
+    # ── Personnel & policy in two columns ─────────────────────────────
+    has_personnel = bool(m["personnel_changes"])
+    has_policy = bool(m.get("policy_approvals"))
+    has_manager = bool(m.get("manager_selections"))
 
-            # Strategic allocation change (WSIB Nov special)
-            if m.get("strategic_allocation_change"):
-                saa = m["strategic_allocation_change"]
-                st.markdown(f"**Strategic Asset Allocation Change**")
-                st.markdown(
-                    f"<div style='background: #162240; border-left: 3px solid #E17055; "
-                    f"padding: 10px 14px; border-radius: 0 6px 6px 0; margin-bottom: 10px;'>"
-                    f"<span style='font-family: Inter, sans-serif; font-size: 0.9rem; "
-                    f"color: #E2E8F0;'>{saa['description']}</span></div>",
-                    unsafe_allow_html=True,
-                )
-                saa_df = pd.DataFrame(saa["changes"])
-                st.dataframe(
-                    saa_df,
-                    column_config={
-                        "asset_class": "Asset Class",
-                        "prior": "Prior Target",
-                        "new": "New Target",
-                        "range": "Policy Range",
-                        "change": "Change",
-                    },
-                    use_container_width=True,
-                    hide_index=True,
-                )
+    if has_personnel or has_policy or has_manager:
+        col1, col2 = st.columns(2)
 
-            # Personnel changes
-            if m["personnel_changes"]:
-                st.markdown("**Personnel & Organizational Changes**")
+        with col1:
+            if has_personnel:
+                section_header("Personnel & Organizational Changes")
                 pc_df = pd.DataFrame(m["personnel_changes"])
                 display_cols = {"event": "Event", "person": "Person",
                                 "new_role": "Role / Position"}
@@ -419,47 +447,46 @@ def render_board_intelligence():
                     hide_index=True,
                 )
 
-            # Manager selections
-            if m.get("manager_selections"):
-                st.markdown("**Manager Selections**")
-                for ms in m["manager_selections"]:
-                    st.markdown(
-                        f"- **{ms['manager']}** selected as {ms['mandate']} "
-                        f"({ms['vote']})"
-                    )
-
-            # Policy approvals
-            if m.get("policy_approvals"):
-                st.markdown("**Policy Approvals**")
+        with col2:
+            if has_policy:
+                section_header("Policy Approvals")
                 for pa in m["policy_approvals"]:
-                    st.markdown(f"- **{pa['policy']}** — {pa['status']}")
-
-            # Dissent
-            if m.get("dissent"):
-                st.markdown("**Dissenting Statements**")
-                for d in m["dissent"]:
                     st.markdown(
-                        f"<div style='background: #2d1a1a; border-left: 3px solid #FF7675; "
-                        f"padding: 10px 14px; border-radius: 0 6px 6px 0; margin-bottom: 8px;'>"
+                        f"<div style='background: #162240; border-left: 3px solid #00B894; "
+                        f"padding: 10px 14px; margin-bottom: 6px; border-radius: 0 6px 6px 0;'>"
                         f"<span style='font-family: Inter, sans-serif; font-weight: 600; "
-                        f"font-size: 0.9rem; color: #FF7675;'>{d['person']}</span><br>"
-                        f"<span style='font-family: Inter, sans-serif; font-size: 0.85rem; "
-                        f"color: #E2E8F0;'>{d['detail']}</span><br>"
-                        f"<span style='font-family: Inter, sans-serif; font-size: 0.8rem; "
-                        f"color: #94A3B8;'>Outcome: {d['outcome']}</span></div>",
+                        f"font-size: 0.9rem; color: #E2E8F0;'>{pa['policy']}</span><br>"
+                        f"<span style='font-family: Inter, sans-serif; font-size: 0.82rem; "
+                        f"color: #94A3B8;'>{pa['status']}</span></div>",
                         unsafe_allow_html=True,
                     )
 
-            # Forward-looking signals
-            if m.get("forward_looking_signals"):
-                st.markdown("**Forward-Looking Allocation Signals**")
-                for sig in m["forward_looking_signals"]:
-                    _signal_card(sig["signal"], sig["detail"])
+            if has_manager:
+                section_header("Manager Selections")
+                for ms in m["manager_selections"]:
+                    st.markdown(
+                        f"<div style='background: #162240; border-left: 3px solid #6C5CE7; "
+                        f"padding: 10px 14px; margin-bottom: 6px; border-radius: 0 6px 6px 0;'>"
+                        f"<span style='font-family: Inter, sans-serif; font-weight: 600; "
+                        f"font-size: 0.9rem; color: #E2E8F0;'>{ms['manager']}</span><br>"
+                        f"<span style='font-family: Inter, sans-serif; font-size: 0.82rem; "
+                        f"color: #94A3B8;'>{ms['mandate']} &nbsp;&bull;&nbsp; {ms['vote']}</span></div>",
+                        unsafe_allow_html=True,
+                    )
+        st.markdown("")
 
-            # Fundraising signal
-            if m.get("fundraising_signal"):
-                _fundraising_callout(m["fundraising_signal"])
+    # ── Forward-looking signals ───────────────────────────────────────
+    if m.get("forward_looking_signals"):
+        section_header("Forward-Looking Allocation Signals")
+        for sig in m["forward_looking_signals"]:
+            _signal_card(sig["signal"], sig["detail"])
+        st.markdown("")
 
+    # ── Fundraising signal callout ────────────────────────────────────
+    if m.get("fundraising_signal"):
+        _fundraising_callout(m["fundraising_signal"])
+
+    st.markdown("")
     st.markdown("")
 
     # ── Coverage & Methodology ────────────────────────────────────────
