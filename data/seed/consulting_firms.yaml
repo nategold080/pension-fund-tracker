@@ -1,0 +1,239 @@
+# Consulting Firms Seed Data
+# Sources: Public board minutes, ACFRs, and official pension fund disclosures
+# Last updated: 2026-02-18
+
+# Minimal pension fund stubs so engagements can be loaded before the pipeline runs.
+# These are upserted — if the pipeline has already created them, this is a no-op.
+pension_funds:
+  - id: calpers
+    name: CalPERS
+    full_name: California Public Employees' Retirement System
+    state: CA
+  - id: calstrs
+    name: CalSTRS
+    full_name: California State Teachers' Retirement System
+    state: CA
+  - id: wsib
+    name: WSIB
+    full_name: Washington State Investment Board
+    state: WA
+  - id: oregon
+    name: Oregon
+    full_name: Oregon Public Employees Retirement Fund
+    state: OR
+  - id: ny_common
+    name: NY Common
+    full_name: New York State Common Retirement Fund
+    state: NY
+  - id: texas_trs
+    name: Texas TRS
+    full_name: Teacher Retirement System of Texas
+    state: TX
+  - id: florida_sba
+    name: Florida SBA
+    full_name: Florida State Board of Administration
+    state: FL
+
+consulting_firms:
+  - id: wilshire
+    name: Wilshire Associates
+    firm_type: general_consultant
+    headquarters: Santa Monica, CA
+    website_url: https://www.wilshire.com
+    aliases:
+      - Wilshire
+      - Wilshire Advisors
+      - Wilshire Associates Incorporated
+
+  - id: meketa
+    name: Meketa Investment Group
+    firm_type: general_consultant
+    headquarters: Westwood, MA
+    aliases:
+      - Meketa
+      - Meketa Group
+
+  - id: callan
+    name: Callan LLC
+    firm_type: general_consultant
+    headquarters: San Francisco, CA
+    website_url: https://www.callan.com
+    aliases:
+      - Callan
+      - Callan Associates
+
+  - id: aon
+    name: Aon Investments
+    firm_type: general_consultant
+    headquarters: Chicago, IL
+    website_url: https://www.aon.com
+    aliases:
+      - Aon
+      - Aon Hewitt Investment Consulting
+      - Aon Hewitt
+
+  - id: nepc
+    name: NEPC LLC
+    firm_type: general_consultant
+    headquarters: Boston, MA
+    website_url: https://www.nepc.com
+    aliases:
+      - NEPC
+      - New England Pension Consultants
+
+  - id: mercer
+    name: Mercer Investments
+    firm_type: general_consultant
+    headquarters: New York, NY
+    website_url: https://www.mercer.com
+    aliases:
+      - Mercer
+      - Mercer Investment Consulting
+
+  - id: cambridge
+    name: Cambridge Associates
+    firm_type: general_consultant
+    headquarters: Boston, MA
+    website_url: https://www.cambridgeassociates.com
+    aliases:
+      - Cambridge
+      - CA
+
+  - id: hamilton_lane
+    name: Hamilton Lane
+    firm_type: specialty_consultant
+    headquarters: Bala Cynwyd, PA
+    website_url: https://www.hamiltonlane.com
+    notes: Specializes in private markets consulting and fund-of-funds
+    aliases:
+      - Hamilton Lane Advisors
+
+  - id: albourne
+    name: Albourne Partners
+    firm_type: specialty_consultant
+    headquarters: London, UK
+    website_url: https://www.albourne.com
+    notes: Specializes in hedge fund and alternative investment consulting
+    aliases:
+      - Albourne
+
+  - id: stepstone
+    name: StepStone Group
+    firm_type: specialty_consultant
+    headquarters: La Jolla, CA
+    website_url: https://www.stepstoneglobal.com
+    notes: Private markets specialist, also manages fund-of-funds
+    aliases:
+      - StepStone
+
+  - id: rva
+    name: RVK Inc.
+    firm_type: general_consultant
+    headquarters: Portland, OR
+    website_url: https://www.rvkinc.com
+    aliases:
+      - RVK
+      - RVK Incorporated
+
+  - id: verus
+    name: Verus Investments
+    firm_type: general_consultant
+    headquarters: Seattle, WA
+    website_url: https://www.verusinvestments.com
+    aliases:
+      - Verus
+      - Verus Advisory
+
+# Known consulting engagements from public records
+# Sources cited per engagement
+engagements:
+  - consulting_firm_id: wilshire
+    pension_fund_id: calpers
+    role: general_investment_consultant
+    mandate_scope: all_asset_classes
+    is_current: true
+    source_url: https://www.calpers.ca.gov
+    source_document: CalPERS Board Materials
+    extraction_method: seed_public_records
+    extraction_confidence: 0.95
+
+  - consulting_firm_id: meketa
+    pension_fund_id: calstrs
+    role: general_investment_consultant
+    mandate_scope: all_asset_classes
+    is_current: true
+    source_url: https://www.calstrs.com
+    source_document: CalSTRS Investment Committee Materials
+    extraction_method: seed_public_records
+    extraction_confidence: 0.95
+
+  - consulting_firm_id: callan
+    pension_fund_id: wsib
+    role: general_investment_consultant
+    mandate_scope: all_asset_classes
+    is_current: true
+    source_url: https://www.sib.wa.gov
+    source_document: WSIB Board Meeting Materials
+    extraction_method: seed_public_records
+    extraction_confidence: 0.90
+
+  - consulting_firm_id: hamilton_lane
+    pension_fund_id: wsib
+    role: private_equity_consultant
+    mandate_scope: private_equity_only
+    is_current: true
+    source_url: https://www.sib.wa.gov
+    source_document: WSIB Private Equity Performance Report
+    extraction_method: seed_public_records
+    extraction_confidence: 0.90
+    notes: Listed as IRR calculation provider in PE performance reports
+
+  - consulting_firm_id: meketa
+    pension_fund_id: oregon
+    role: general_investment_consultant
+    mandate_scope: all_asset_classes
+    is_current: true
+    source_url: https://www.oregon.gov/treasury
+    source_document: Oregon State Treasury Investment Division
+    extraction_method: seed_public_records
+    extraction_confidence: 0.90
+
+  - consulting_firm_id: callan
+    pension_fund_id: ny_common
+    role: general_investment_consultant
+    mandate_scope: all_asset_classes
+    is_current: true
+    source_url: https://www.osc.ny.gov
+    source_document: NY Common Retirement Fund Annual Report
+    extraction_method: seed_public_records
+    extraction_confidence: 0.85
+
+  - consulting_firm_id: aon
+    pension_fund_id: texas_trs
+    role: general_investment_consultant
+    mandate_scope: all_asset_classes
+    is_current: true
+    source_url: https://www.trs.texas.gov
+    source_document: Texas TRS ACFR 2024
+    extraction_method: seed_public_records
+    extraction_confidence: 0.95
+
+  - consulting_firm_id: albourne
+    pension_fund_id: texas_trs
+    role: alternatives_consultant
+    mandate_scope: alternatives_only
+    is_current: true
+    source_url: https://www.trs.texas.gov
+    source_document: Texas TRS ACFR 2024
+    extraction_method: seed_public_records
+    extraction_confidence: 0.95
+
+  - consulting_firm_id: aon
+    pension_fund_id: florida_sba
+    role: general_investment_consultant
+    mandate_scope: all_asset_classes
+    is_current: true
+    source_url: https://www.sbafla.com
+    source_document: Florida SBA Annual Report
+    extraction_method: seed_public_records
+    extraction_confidence: 0.85

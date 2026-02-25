@@ -22,7 +22,10 @@ import pdfplumber
 import requests
 
 from src.adapters.base import PensionFundAdapter
-from src.utils.normalization import parse_dollar_amount, parse_percentage
+from src.utils.normalization import (
+    parse_dollar_amount, parse_percentage, rejoin_split_number,
+    extract_as_of_date_from_text,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -63,20 +66,6 @@ class CalSTRSAdapter(PensionFundAdapter):
 
         return data
 
-    def _extract_as_of_date(self, text: str) -> Optional[str]:
-        """Extract as-of date from the PDF text."""
-        match = re.search(
-            r'[Aa]s of\s+(January|February|March|April|May|June|July|August|'
-            r'September|October|November|December)\s+(\d{1,2}),?\s+(\d{4})',
-            text
-        )
-        if match:
-            from dateutil import parser as dateutil_parser
-            date_str = f"{match.group(1)} {match.group(2)}, {match.group(3)}"
-            parsed = dateutil_parser.parse(date_str)
-            return parsed.date().isoformat()
-        return None
-
     def parse(self, raw_data: bytes) -> list[dict]:
         """Parse CalSTRS PDF into commitment records using word-level extraction.
 
@@ -89,7 +78,7 @@ class CalSTRSAdapter(PensionFundAdapter):
         with pdfplumber.open(io.BytesIO(raw_data)) as pdf:
             # Extract as-of date from first page text
             first_text = pdf.pages[0].extract_text() or ""
-            as_of_date = self._extract_as_of_date(first_text)
+            as_of_date = extract_as_of_date_from_text(first_text)
 
             for page in pdf.pages:
                 page_records = self._parse_page_by_words(page, as_of_date)
@@ -160,10 +149,10 @@ class CalSTRSAdapter(PensionFundAdapter):
                 continue
 
             # Reconstruct dollar amounts from words that may have been split
-            committed_text = self._rejoin_number(committed_text)
-            contributed_text = self._rejoin_number(contributed_text)
-            distributed_text = self._rejoin_number(distributed_text)
-            market_value_text = self._rejoin_number(market_value_text)
+            committed_text = rejoin_split_number(committed_text)
+            contributed_text = rejoin_split_number(contributed_text)
+            distributed_text = rejoin_split_number(distributed_text)
+            market_value_text = rejoin_split_number(market_value_text)
 
             vintage_year = int(vy_text)
             commitment_mm = parse_dollar_amount(committed_text)
@@ -218,9 +207,3 @@ class CalSTRSAdapter(PensionFundAdapter):
 
         return records
 
-    @staticmethod
-    def _rejoin_number(text: str) -> str:
-        """Rejoin number parts that got split: '7 0,000,000' -> '70,000,000'."""
-        if not text:
-            return text
-        return re.sub(r'(\d)\s+(\d)', r'\1\2', text)

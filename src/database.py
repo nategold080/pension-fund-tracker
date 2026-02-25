@@ -6,7 +6,7 @@ Schema designed to migrate to PostgreSQL trivially.
 
 import sqlite3
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -103,6 +103,56 @@ CREATE TABLE IF NOT EXISTS review_queue (
     resolved BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS consulting_firms (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    name_normalized TEXT,
+    firm_type TEXT,
+    headquarters TEXT,
+    website_url TEXT,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS consulting_engagements (
+    id TEXT PRIMARY KEY,
+    consulting_firm_id TEXT REFERENCES consulting_firms(id),
+    pension_fund_id TEXT REFERENCES pension_funds(id),
+    role TEXT NOT NULL,
+    mandate_scope TEXT,
+    start_date DATE,
+    end_date DATE,
+    is_current BOOLEAN,
+    annual_fee_usd REAL,
+    fee_basis TEXT,
+    contract_term_years REAL,
+    source_url TEXT,
+    source_document TEXT,
+    source_page INTEGER,
+    extraction_method TEXT,
+    extraction_confidence REAL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(consulting_firm_id, pension_fund_id, role, start_date)
+);
+
+CREATE TABLE IF NOT EXISTS consulting_firm_aliases (
+    id TEXT PRIMARY KEY,
+    consulting_firm_id TEXT REFERENCES consulting_firms(id),
+    alias TEXT NOT NULL UNIQUE
+);
+
+-- Performance indexes
+CREATE INDEX IF NOT EXISTS idx_commitments_fund_id ON commitments(fund_id);
+CREATE INDEX IF NOT EXISTS idx_commitments_pension_fund_id ON commitments(pension_fund_id);
+CREATE INDEX IF NOT EXISTS idx_commitments_as_of_date ON commitments(as_of_date);
+CREATE INDEX IF NOT EXISTS idx_fund_aliases_fund_id ON fund_aliases(fund_id);
+CREATE INDEX IF NOT EXISTS idx_review_queue_resolved ON review_queue(resolved);
+CREATE INDEX IF NOT EXISTS idx_consulting_engagements_firm ON consulting_engagements(consulting_firm_id);
+CREATE INDEX IF NOT EXISTS idx_consulting_engagements_pension ON consulting_engagements(pension_fund_id);
+CREATE INDEX IF NOT EXISTS idx_consulting_firm_aliases_firm ON consulting_firm_aliases(consulting_firm_id);
 """
 
 
@@ -152,7 +202,7 @@ class Database:
         disclosure_quality: Optional[str] = None,
     ) -> str:
         """Insert or update a pension fund record."""
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         self.conn.execute(
             """INSERT INTO pension_funds (id, name, full_name, state, total_aum_mm,
                 website_url, data_source_type, disclosure_quality, created_at, updated_at)
@@ -200,7 +250,7 @@ class Database:
         fund_size_mm: Optional[float] = None,
     ) -> str:
         """Insert or update a fund record."""
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         self.conn.execute(
             """INSERT INTO funds (id, fund_name, fund_name_raw, general_partner,
                 general_partner_normalized, vintage_year, asset_class, sub_strategy,
@@ -265,7 +315,7 @@ class Database:
         extraction_confidence: Optional[float] = None,
     ) -> str:
         """Insert or update a commitment record. Uses UPSERT on unique constraint."""
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         id = generate_id()
         self.conn.execute(
             """INSERT INTO commitments (id, pension_fund_id, fund_id, commitment_mm,
@@ -427,7 +477,7 @@ class Database:
     ) -> str:
         """Create a new extraction run record."""
         id = generate_id()
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         self.conn.execute(
             """INSERT INTO extraction_runs (id, pension_fund_id, started_at, status,
                 source_url, source_hash)
@@ -447,7 +497,7 @@ class Database:
         errors: Optional[str] = None,
     ):
         """Mark an extraction run as complete."""
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         self.conn.execute(
             """UPDATE extraction_runs SET
                 completed_at = ?, status = ?, records_extracted = ?,
@@ -552,3 +602,182 @@ class Database:
             ORDER BY f.fund_name"""
         ).fetchall()
         return [dict(r) for r in rows]
+
+    # ---- Consulting Firms ----
+
+    def upsert_consulting_firm(
+        self,
+        id: str,
+        name: str,
+        name_normalized: Optional[str] = None,
+        firm_type: Optional[str] = None,
+        headquarters: Optional[str] = None,
+        website_url: Optional[str] = None,
+        notes: Optional[str] = None,
+    ) -> str:
+        """Insert or update a consulting firm record."""
+        now = datetime.now(timezone.utc).isoformat()
+        self.conn.execute(
+            """INSERT INTO consulting_firms (id, name, name_normalized, firm_type,
+                headquarters, website_url, notes, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                name=excluded.name,
+                name_normalized=excluded.name_normalized,
+                firm_type=excluded.firm_type,
+                headquarters=excluded.headquarters,
+                website_url=excluded.website_url,
+                notes=excluded.notes,
+                updated_at=excluded.updated_at
+            """,
+            (id, name, name_normalized, firm_type, headquarters,
+             website_url, notes, now, now),
+        )
+        self.conn.commit()
+        return id
+
+    def get_consulting_firm(self, id: str) -> Optional[dict]:
+        """Get a consulting firm by ID."""
+        row = self.conn.execute(
+            "SELECT * FROM consulting_firms WHERE id = ?", (id,)
+        ).fetchone()
+        return dict(row) if row else None
+
+    def get_consulting_firm_by_name(self, name: str) -> Optional[dict]:
+        """Get a consulting firm by exact name."""
+        row = self.conn.execute(
+            "SELECT * FROM consulting_firms WHERE name = ?", (name,)
+        ).fetchone()
+        return dict(row) if row else None
+
+    def list_consulting_firms(self) -> list[dict]:
+        """List all consulting firms."""
+        rows = self.conn.execute(
+            "SELECT * FROM consulting_firms ORDER BY name"
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def add_consulting_firm_alias(self, consulting_firm_id: str, alias: str) -> str:
+        """Add an alias for a consulting firm. Returns the alias ID."""
+        id = generate_id()
+        try:
+            self.conn.execute(
+                """INSERT INTO consulting_firm_aliases (id, consulting_firm_id, alias)
+                VALUES (?, ?, ?)""",
+                (id, consulting_firm_id, alias),
+            )
+            self.conn.commit()
+        except sqlite3.IntegrityError:
+            row = self.conn.execute(
+                "SELECT id FROM consulting_firm_aliases WHERE alias = ?",
+                (alias,),
+            ).fetchone()
+            return row["id"] if row else id
+        return id
+
+    def find_consulting_firm_by_alias(self, alias: str) -> Optional[dict]:
+        """Find a consulting firm by one of its aliases."""
+        row = self.conn.execute(
+            """SELECT cf.* FROM consulting_firms cf
+            JOIN consulting_firm_aliases cfa ON cf.id = cfa.consulting_firm_id
+            WHERE cfa.alias = ?""",
+            (alias,),
+        ).fetchone()
+        return dict(row) if row else None
+
+    # ---- Consulting Engagements ----
+
+    def upsert_consulting_engagement(
+        self,
+        consulting_firm_id: str,
+        pension_fund_id: str,
+        role: str,
+        mandate_scope: Optional[str] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        is_current: Optional[bool] = None,
+        annual_fee_usd: Optional[float] = None,
+        fee_basis: Optional[str] = None,
+        contract_term_years: Optional[float] = None,
+        source_url: Optional[str] = None,
+        source_document: Optional[str] = None,
+        source_page: Optional[int] = None,
+        extraction_method: Optional[str] = None,
+        extraction_confidence: Optional[float] = None,
+    ) -> str:
+        """Insert or update a consulting engagement record.
+
+        Uses application-level check for NULL start_date since SQLite
+        UNIQUE constraints treat NULLs as distinct.
+        """
+        now = datetime.now(timezone.utc).isoformat()
+
+        # Check for existing record (handles NULL start_date correctly)
+        existing = self.conn.execute(
+            """SELECT id FROM consulting_engagements
+            WHERE consulting_firm_id = ? AND pension_fund_id = ? AND role = ?
+            AND start_date IS ?""",
+            (consulting_firm_id, pension_fund_id, role, start_date),
+        ).fetchone()
+
+        if existing:
+            # Update existing record
+            self.conn.execute(
+                """UPDATE consulting_engagements SET
+                    mandate_scope=?, end_date=?, is_current=?, annual_fee_usd=?,
+                    fee_basis=?, contract_term_years=?, source_url=?, source_document=?,
+                    source_page=?, extraction_method=?, extraction_confidence=?,
+                    updated_at=?
+                WHERE id=?""",
+                (mandate_scope, end_date, is_current, annual_fee_usd, fee_basis,
+                 contract_term_years, source_url, source_document, source_page,
+                 extraction_method, extraction_confidence, now, existing["id"]),
+            )
+            self.conn.commit()
+            return existing["id"]
+
+        # Insert new record
+        id = generate_id()
+        self.conn.execute(
+            """INSERT INTO consulting_engagements (id, consulting_firm_id, pension_fund_id,
+                role, mandate_scope, start_date, end_date, is_current, annual_fee_usd,
+                fee_basis, contract_term_years, source_url, source_document, source_page,
+                extraction_method, extraction_confidence, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (id, consulting_firm_id, pension_fund_id, role, mandate_scope,
+             start_date, end_date, is_current, annual_fee_usd, fee_basis,
+             contract_term_years, source_url, source_document, source_page,
+             extraction_method, extraction_confidence, now, now),
+        )
+        self.conn.commit()
+        return id
+
+    def get_consulting_engagements_joined(
+        self,
+        pension_fund_id: Optional[str] = None,
+        consulting_firm_id: Optional[str] = None,
+    ) -> list[dict]:
+        """Get consulting engagements with firm and pension fund names joined."""
+        query = """SELECT ce.*, cf.name as consulting_firm_name, cf.firm_type,
+                p.name as pension_fund_name, p.state as pension_fund_state
+            FROM consulting_engagements ce
+            JOIN consulting_firms cf ON ce.consulting_firm_id = cf.id
+            JOIN pension_funds p ON ce.pension_fund_id = p.id
+            WHERE 1=1"""
+        params = []
+        if pension_fund_id:
+            query += " AND ce.pension_fund_id = ?"
+            params.append(pension_fund_id)
+        if consulting_firm_id:
+            query += " AND ce.consulting_firm_id = ?"
+            params.append(consulting_firm_id)
+        query += " ORDER BY cf.name, p.name"
+        rows = self.conn.execute(query, params).fetchall()
+        return [dict(r) for r in rows]
+
+    def count_consulting_engagements(self) -> int:
+        """Count consulting engagement records."""
+        row = self.conn.execute(
+            "SELECT COUNT(*) as cnt FROM consulting_engagements"
+        ).fetchone()
+        return row["cnt"]

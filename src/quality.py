@@ -6,19 +6,18 @@ and generates review queue entries and quality reports.
 
 import logging
 from datetime import datetime
-from typing import Optional
 
 from src.database import Database
 
 logger = logging.getLogger(__name__)
 
-# Reasonable ranges — widened from original CLAUDE.md defaults to reduce false flags
-COMMITMENT_MIN_MM = 0.0      # Some legitimate sub-$1M commitments (e.g. state programs)
-COMMITMENT_MAX_MM = 5000.0
-IRR_MIN = -0.30              # Early-vintage / distressed strategies can trail further
-IRR_MAX = 1.0                # Top-quartile early VC vintages can exceed 50%
+# Reasonable ranges — widened to reduce false flags on legitimate outliers
+COMMITMENT_MIN_MM = 0.1      # Flag sub-$0.1M as likely data errors
+COMMITMENT_MAX_MM = 5000.0   # $5B cap for single fund commitments
+IRR_MIN = -0.50              # Early-vintage / distressed strategies can trail to -50%
+IRR_MAX = 1.50               # Top-quartile early VC vintages can exceed 100%
 MULTIPLE_MIN = 0.0           # Recent-vintage funds at 0.1-0.5x are normal
-MULTIPLE_MAX = 10.0          # Mature VC funds can legitimately reach 5-10x
+MULTIPLE_MAX = 15.0          # Exceptional VC funds can legitimately reach 10-15x
 VINTAGE_MIN = 1980           # Some legacy commitments from the 1980s exist
 VINTAGE_MAX = datetime.now().year
 
@@ -42,11 +41,13 @@ class QualityChecker:
         # Clear stale flags before re-checking to avoid accumulating duplicates
         self.db.clear_review_items_by_type("value_range")
         self.db.clear_review_items_by_type("low_completeness")
+        self.db.clear_review_items_by_type("missing_consulting_data")
 
         flags = []
         flags.extend(self._check_value_ranges(commitments))
         flags.extend(self._check_completeness(commitments))
         flags.extend(self._check_cross_fund_consistency())
+        flags.extend(self._check_consulting_coverage())
 
         # Insert flags into review queue
         for flag in flags:
@@ -96,10 +97,17 @@ class QualityChecker:
                                        f"[{IRR_MIN:.0%}, {IRR_MAX:.0%}] for {name}",
                     })
 
-            # Net multiple
+            # Net multiple — negative multiples are always invalid
             if c.get("net_multiple") is not None:
                 v = c["net_multiple"]
-                if v < MULTIPLE_MIN or v > MULTIPLE_MAX:
+                if v < 0:
+                    flags.append({
+                        "commitment_id": cid,
+                        "flag_type": "value_range",
+                        "flag_detail": f"Negative net multiple {v:.2f}x for {name} — "
+                                       f"multiples cannot be negative (total value / paid-in >= 0)",
+                    })
+                elif v < MULTIPLE_MIN or v > MULTIPLE_MAX:
                     flags.append({
                         "commitment_id": cid,
                         "flag_type": "value_range",
@@ -199,6 +207,24 @@ class QualityChecker:
                     "flag_detail": f"Fund '{fn}' has divergent net multiples: {'; '.join(detail_parts)}",
                 })
 
+        return flags
+
+    def _check_consulting_coverage(self) -> list[dict]:
+        """Flag pension funds that have no consulting engagement data."""
+        flags = []
+        pension_funds = self.db.list_pension_funds()
+        for pf in pension_funds:
+            engagements = self.db.get_consulting_engagements_joined(
+                pension_fund_id=pf["id"]
+            )
+            if not engagements:
+                flags.append({
+                    "commitment_id": None,
+                    "flag_type": "missing_consulting_data",
+                    "flag_detail": f"Pension fund '{pf['name']}' has no consulting "
+                                   f"engagement data. Run 'seed-consultants' or add "
+                                   f"consulting data to the adapter.",
+                })
         return flags
 
     def generate_cross_fund_report(self) -> str:

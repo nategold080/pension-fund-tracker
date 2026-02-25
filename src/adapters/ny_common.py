@@ -21,7 +21,9 @@ import pdfplumber
 import requests
 
 from src.adapters.base import PensionFundAdapter
-from src.utils.normalization import parse_dollar_amount
+from src.utils.normalization import (
+    parse_dollar_amount, rejoin_split_number, extract_as_of_date_from_text,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +97,9 @@ class NYCommonAdapter(PensionFundAdapter):
         with pdfplumber.open(io.BytesIO(raw_data)) as pdf:
             in_pe_section = False
 
+            # Extract as_of_date from early pages of the PDF
+            as_of_date = self._extract_as_of_date(pdf)
+
             for page in pdf.pages:
                 text = page.extract_text() or ""
 
@@ -107,13 +112,32 @@ class NYCommonAdapter(PensionFundAdapter):
                 if not in_pe_section:
                     continue
 
-                page_records = self._parse_page_by_words(page)
+                page_records = self._parse_page_by_words(page, as_of_date)
                 records.extend(page_records)
 
         logger.info(f"Parsed {len(records)} NY Common PE commitment records")
         return records
 
-    def _parse_page_by_words(self, page) -> list[dict]:
+    def _extract_as_of_date(self, pdf) -> str:
+        """Extract the as-of date from the PDF document text.
+
+        Scans the first few pages for date patterns like 'March 31, 2025'
+        or 'As of' headers. Falls back to hardcoded value if extraction fails.
+        """
+        fallback = "2025-03-31"
+        # Check first 5 pages for date references
+        for page in pdf.pages[:5]:
+            text = page.extract_text() or ""
+            result = extract_as_of_date_from_text(text)
+            if result:
+                logger.info(f"Extracted NY Common as-of date from PDF: {result}")
+                return result
+        logger.warning(
+            f"Could not extract as-of date from NY Common PDF, using fallback: {fallback}"
+        )
+        return fallback
+
+    def _parse_page_by_words(self, page, as_of_date: str = "2025-03-31") -> list[dict]:
         """Parse a single PDF page by extracting words and grouping by row."""
         words = page.extract_words()
         if not words:
@@ -175,11 +199,11 @@ class NYCommonAdapter(PensionFundAdapter):
             vintage_year = self._extract_vintage_year(date_text)
 
             # Parse dollar amounts (raw dollars -> millions)
-            committed_text = self._rejoin_number(committed_text)
-            contributed_text = self._rejoin_number(contributed_text)
-            distributed_text = self._rejoin_number(distributed_text)
-            fair_value_text = self._rejoin_number(fair_value_text)
-            total_value_text = self._rejoin_number(total_value_text)
+            committed_text = rejoin_split_number(committed_text)
+            contributed_text = rejoin_split_number(contributed_text)
+            distributed_text = rejoin_split_number(distributed_text)
+            fair_value_text = rejoin_split_number(fair_value_text)
+            total_value_text = rejoin_split_number(total_value_text)
 
             commitment_mm = parse_dollar_amount(committed_text)
             capital_called_mm = parse_dollar_amount(contributed_text)
@@ -207,7 +231,7 @@ class NYCommonAdapter(PensionFundAdapter):
                     "net_irr": None,  # Not provided in this source
                     "net_multiple": net_multiple,
                     "dpi": None,
-                    "as_of_date": "2025-03-31",
+                    "as_of_date": as_of_date,
                     "source_url": NY_COMMON_PDF_URL,
                     "source_document": "NY Common Retirement Fund Asset Listing 2025",
                     "extraction_method": "deterministic_pdf",
@@ -230,9 +254,3 @@ class NYCommonAdapter(PensionFundAdapter):
         year = 2000 + yy if yy <= 30 else 1900 + yy
         return year
 
-    @staticmethod
-    def _rejoin_number(text: str) -> str:
-        """Rejoin number parts split by spaces: '9 1,515,215' -> '91,515,215'."""
-        if not text:
-            return text
-        return re.sub(r"(\d)\s+(\d)", r"\1\2", text)

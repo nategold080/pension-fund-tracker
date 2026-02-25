@@ -97,6 +97,31 @@ class PensionFundAdapter(ABC):
             data = raw_data
         return hashlib.sha256(data).hexdigest()
 
+    def extract_consulting_data(self) -> list[dict]:
+        """Extract consulting firm engagement data from this pension fund's sources.
+
+        Override in subclasses that have consulting data in their source documents.
+        Each dict should contain:
+            - consulting_firm_name: str (required) — firm name as it appears in the source
+            - role: str (required) — e.g., "general_investment_consultant"
+            - mandate_scope: str | None
+            - start_date: str | None — ISO date
+            - end_date: str | None — ISO date
+            - is_current: bool | None
+            - annual_fee_usd: float | None
+            - fee_basis: str | None
+            - contract_term_years: float | None
+            - source_url: str (required)
+            - source_document: str | None
+            - source_page: int | None
+            - extraction_method: str (required)
+            - extraction_confidence: float (required)
+
+        Returns:
+            List of consulting engagement dicts. Empty list by default.
+        """
+        return []
+
     def get_pension_fund_info(self) -> dict:
         """Return pension fund metadata for database registration."""
         return {

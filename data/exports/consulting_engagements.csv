@@ -1,0 +1,10 @@
+consulting_firm_name,firm_type,pension_fund_name,pension_fund_state,role,mandate_scope,start_date,end_date,is_current,annual_fee_usd,fee_basis,contract_term_years,source_url,source_document,extraction_method,extraction_confidence
+Albourne Partners,specialty_consultant,Texas TRS,TX,alternatives_consultant,alternatives_only,,,1,,,,https://www.trs.texas.gov,Texas TRS ACFR 2024,seed_public_records,0.95
+Aon Investments,general_consultant,Florida SBA,FL,general_investment_consultant,all_asset_classes,,,1,,,,https://www.sbafla.com,Florida SBA Annual Report,seed_public_records,0.85
+Aon Investments,general_consultant,Texas TRS,TX,general_investment_consultant,all_asset_classes,,,1,,,,https://www.trs.texas.gov,Texas TRS ACFR 2024,seed_public_records,0.95
+Callan LLC,general_consultant,NY Common,NY,general_investment_consultant,all_asset_classes,,,1,,,,https://www.osc.ny.gov,NY Common Retirement Fund Annual Report,seed_public_records,0.85
+Callan LLC,general_consultant,WSIB,WA,general_investment_consultant,all_asset_classes,,,1,,,,https://www.sib.wa.gov,WSIB Board Meeting Materials,seed_public_records,0.9
+Hamilton Lane,specialty_consultant,WSIB,WA,private_equity_consultant,private_equity_only,,,1,,,,https://www.sib.wa.gov,WSIB Private Equity Performance Report,seed_public_records,0.9
+Meketa Investment Group,general_consultant,CalSTRS,CA,general_investment_consultant,all_asset_classes,,,1,,,,https://www.calstrs.com,CalSTRS Investment Committee Materials,seed_public_records,0.95
+Meketa Investment Group,general_consultant,Oregon,OR,general_investment_consultant,all_asset_classes,,,1,,,,https://www.oregon.gov/treasury,Oregon State Treasury Investment Division,seed_public_records,0.9
+Wilshire Associates,general_consultant,CalPERS,CA,general_investment_consultant,all_asset_classes,,,1,,,,https://www.calpers.ca.gov,CalPERS Board Materials,seed_public_records,0.95

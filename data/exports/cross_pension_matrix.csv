@@ -1,0 +1,347 @@
+fund_name,vintage_year,asset_class,sub_strategy,calpers_mm,calstrs_mm,ny_common_mm,oregon_mm,wsib_mm,pension_count,avg_irr,avg_multiple
+Blackstone Capital Partners VI,2011,Private Equity,Buyout,375.00,300.00,300.00,200.00,300.00,5,0.1228,1.8319
+Blackstone Capital Partners VII,2016,Private Equity,Buyout,375.00,450.00,500.00,450.00,450.00,5,0.1363,1.7074
+Blackstone Capital Partners VIII,2021,Private Equity,Buyout,262.50,750.00,500.00,500.00,750.00,5,0.1104,1.2547
+Francisco Partners VI,2021,Private Equity,Buyout,250.00,300.00,200.00,250.00,300.00,5,0.1419,1.4347
+Francisco Partners VII,2023,Private Equity,Buyout,450.00,300.00,250.00,250.00,300.00,5,0.1371,1.0785
+Hellman & Friedman Capital Partners IX,2020,Private Equity,Buyout,578.72,450.00,325.00,280.00,750.00,5,0.1318,1.6142
+Hellman & Friedman Capital Partners VIII,2016,Private Equity,Buyout,500.00,200.00,300.00,100.00,600.00,5,0.1060,1.7307
+Hellman & Friedman Capital Partners X,2021,Private Equity,Buyout,940.01,600.00,500.00,350.00,1000.00,5,0.0552,1.1620
+KKR 2006 Fund,2006,Private Equity,Buyout,400.00,300.00,600.00,1312.50,1500.00,5,0.0894,1.7443
+TPG Growth IV,2018,Private Equity,Growth Equity,75.00,200.00,350.00,200.00,350.00,5,0.1437,1.6613
+TPG Partners IV,2003,Private Equity,Buyout,200.00,350.00,75.00,300.00,175.00,5,0.1522,1.9387
+TPG Partners V,2006,Private Equity,Buyout,600.00,1000.00,275.00,296.10,750.00,5,0.0453,1.3389
+Thoma Bravo Fund XIV,2021,Private Equity,Buyout,600.00,300.00,400.00,250.00,200.00,5,0.0622,1.2086
+Thoma Bravo Fund XV,2022,Private Equity,Buyout,348.29,300.00,400.00,250.00,200.00,5,0.1414,1.3290
+Advent International GPE VI-A,2008,Private Equity,Buyout,500.00,234.77,,100.00,135.01,4,0.1583,2.0419
+Apollo Investment Fund VI,2006,Private Equity,Buyout,520.00,250.00,350.00,200.00,,4,0.0846,1.5136
+Blackstone Capital Partners V,2006,Private Equity,Buyout,38.40,1600.00,675.00,,400.00,4,0.0833,1.6509
+CVC Capital Partners VIII (A),2021,Private Equity,Buyout,492.57,469.54,540.98,356.00,,4,0.0863,1.1751
+CVC European Equity Partners III,2001,Private Equity,,200.00,200.00,150.00,150.00,,4,0.4086,2.5556
+CVC European Equity Partners IV (D),2005,Private Equity,,332.21,352.15,135.24,145.50,,4,0.1699,1.8701
+CVC European Equity Partners V (B),2008,Private Equity,,573.20,369.76,162.29,291.20,,4,0.1652,1.9838
+Centerbridge Capital Partners III,2015,Private Equity,Distressed/Special Situations,150.00,250.00,200.00,135.00,,4,0.1391,1.5774
+Francisco Partners Agility III,2025,Private Equity,Buyout,100.00,100.00,75.00,50.00,,4,0.3272,1.1374
+Francisco Partners IV,2015,Private Equity,Buyout,,140.00,75.00,150.00,140.00,4,0.2573,3.0095
+Hellman & Friedman Capital Partners VII,2011,Private Equity,Buyout,300.00,100.00,200.00,,400.00,4,0.2457,3.3756
+Hellman & Friedman Capital Partners XI,2025,Private Equity,Buyout,,200.00,300.00,250.00,750.00,4,0.0000,
+KKR Americas Fund XII,2017,Private Equity,Buyout,,300.00,600.00,500.00,750.00,4,0.1973,2.1345
+KKR Asian Fund,2007,Private Equity,Buyout,272.58,,50.00,99.10,400.00,4,0.1363,1.7124
+KKR Asian Fund II,2013,Private Equity,Buyout,350.00,,150.00,200.00,400.00,4,-0.0020,1.0228
+KKR Asian Fund III,2018,Private Equity,Buyout,,180.00,285.00,250.00,500.00,4,0.1905,1.9760
+KKR European Fund II,2005,Private Equity,Buyout,202.98,,54.10,500.00,500.00,4,0.0449,1.2737
+KKR North America Fund XIII SCSp,2022,Private Equity,Buyout,600.00,275.00,400.00,,750.00,4,0.1158,1.1849
+OCM Opportunities Fund VIIb,2008,Private Equity,Opportunistic,,300.00,200.00,100.00,215.00,4,0.1647,1.7545
+Oaktree Opportunities Fund VIIIb,2011,Private Equity,Opportunistic,200.00,,100.00,50.00,125.00,4,0.0815,1.6828
+Palladium Equity Partners V,2018,Private Equity,,75.00,100.00,150.00,250.00,,4,0.1325,1.5740
+TA XIV-A,2021,Private Equity,,150.00,,410.00,100.00,525.00,4,0.0712,1.1315
+TPG Growth II,2011,Private Equity,Growth Equity,,125.00,200.00,75.00,200.00,4,0.1512,2.0648
+TPG Growth V,2021,Private Equity,Growth Equity,200.00,100.00,,250.00,400.00,4,0.1417,1.4180
+TPG PARTNERS IX,2023,Private Equity,Buyout,300.00,200.00,,280.00,480.00,4,0.2180,1.2145
+TPG Partners VI,2008,Private Equity,Buyout,,450.00,270.00,750.00,750.00,4,0.0958,1.4959
+TPG Partners VIII,2019,Private Equity,Buyout,150.00,200.00,,400.00,750.00,4,0.1762,1.5123
+ACON Equity Partners IV,2016,Private Equity,,,50.00,200.00,112.50,,3,0.0868,1.5166
+Advent International GPE IX,2019,Private Equity,Buyout,,300.00,,100.00,600.00,3,0.1437,1.6665
+Advent International GPE VII-C,2012,Private Equity,Buyout,450.00,,,50.00,400.00,3,0.1318,1.8049
+Apax Europe VII,2007,Private Equity,Buyout,,446.06,,199.50,159.37,3,0.0426,1.2369
+Apollo Investment Fund IX,2019,Private Equity,Buyout,550.00,300.00,480.00,,,3,0.1631,1.5350
+Apollo Investment Fund VII,2008,Private Equity,Buyout,,350.00,350.00,400.00,,3,0.2252,1.8262
+Apollo Investment Fund VIII,2013,Private Equity,Buyout,350.00,,400.00,400.00,,3,0.0985,1.4536
+Apollo Investment Fund X,2023,Private Equity,Buyout,225.00,300.00,350.00,,,3,0.1914,1.1446
+Ares Corporate Opportunities Fund V,2017,Private Equity,Opportunistic,425.00,300.00,300.00,,,3,0.0583,1.2979
+Arsenal Capital Partners Growth,2022,Private Equity,Growth Equity,50.00,50.00,,50.00,,3,-0.2176,0.6806
+Arsenal Capital Partners VI,2022,Private Equity,,150.00,200.00,,150.00,,3,-0.0968,0.8561
+Blackstone Communications Partners I,2000,Private Equity,Buyout,100.00,250.00,50.00,,,3,0.0650,1.2220
+Bridgepoint Europe III 'D',2005,Private Equity,Buyout,194.30,,108.20,,135.17,3,0.0239,1.2128
+Bridgepoint Europe IV 'D',2008,Private Equity,Buyout,388.49,,107.93,,194.51,3,0.0930,1.5637
+Bridgepoint Europe VI,2019,Private Equity,Buyout,,,270.49,277.30,393.45,3,0.1435,1.6024
+CVC Capital Partners Asia Pacific III,2008,Private Equity,Buyout,,200.00,100.00,100.00,,3,0.1269,1.6031
+CVC Capital Partners Asia V,2020,Private Equity,Buyout,200.00,100.00,,150.00,,3,0.1262,1.3744
+CVC Capital Partners Asia VI (A),2024,Private Equity,Buyout,300.00,125.00,,150.00,,3,0.1992,1.0877
+Carlyle Partners V,2007,Private Equity,Buyout,800.00,500.00,150.00,,,3,0.1316,1.7754
+Carlyle Partners VII,2018,Private Equity,Buyout,300.00,500.00,,,600.00,3,0.0988,1.4200
+Centerbridge Capital Partners II,2011,Private Equity,Distressed/Special Situations,,225.00,150.00,100.00,,3,-0.0723,0.7838
+Clearlake Capital Partners VII,2022,Private Equity,Buyout,350.00,,200.00,250.00,,3,0.0405,1.0994
+First Reserve Fund XI,2006,Private Equity,Energy,500.00,800.00,,,300.00,3,-0.0928,0.6754
+First Reserve Fund XIII,2014,Private Equity,Energy,400.00,200.00,,,400.00,3,-0.0203,0.9139
+FountainVest China Growth Capital Fund II,2013,Private Equity,Growth Equity,,45.00,75.00,,150.00,3,0.1140,1.4347
+Francisco Partners Agility II,2020,Private Equity,Buyout,50.00,50.00,,50.00,,3,0.2902,2.1427
+Francisco Partners III,2011,Private Equity,Buyout,100.00,75.00,,100.00,,3,0.2292,3.4349
+Francisco Partners V,2018,Private Equity,Buyout,,200.00,,200.00,200.00,3,0.1813,2.2381
+Genstar Capital Partners XI,2023,Private Equity,Buyout,200.00,,250.00,229.10,,3,,1.2784
+Green Equity Investors IX,2023,Private Equity,,500.00,,350.00,,325.00,3,0.1922,1.1769
+Green Equity Investors V,2007,Private Equity,,400.00,,125.00,,205.00,3,0.1827,2.2660
+Green Equity Investors VII,2017,Private Equity,,,,182.00,250.00,350.00,3,0.1787,1.9945
+Green Equity Investors VIII,2020,Private Equity,,376.21,,400.00,,400.00,3,0.1149,1.4127
+Insight Partners XI,2020,Private Equity,Growth Equity,400.00,,250.00,,200.00,3,0.1278,1.6419
+Insight Partners XII,2021,Private Equity,Growth Equity,600.00,,300.00,,250.00,3,0.0134,1.0007
+Jade Equity Investors II,2024,Private Equity,,150.00,,50.00,,125.00,3,0.3417,1.1408
+KKR Asian Fund IV SCSp,2021,Private Equity,Buyout,300.00,300.00,,,500.00,3,0.1891,1.5036
+KKR Millennium Fund,2002,Private Equity,Buyout,,,250.00,1000.00,1500.00,3,0.1655,1.8150
+KKR North America Fund XI,2013,Private Equity,Buyout,,150.00,,750.00,500.00,3,0.1921,2.2635
+KSL Capital Partners III,2011,Private Equity,,,,115.00,100.00,200.00,3,0.0769,1.2244
+KSL Capital Partners IV,2016,Private Equity,,,,225.00,150.00,250.00,3,0.1256,1.6392
+KSL Capital Partners V,2019,Private Equity,,,,300.00,200.00,300.00,3,0.1200,1.3059
+Madison Dearborn Capital Partners V,2006,Private Equity,Buyout,300.00,,75.00,,175.00,3,0.0749,1.6029
+New Mountain Partners III,2007,Private Equity,Buyout,400.00,,100.00,100.00,,3,0.1345,2.2201
+Nordic Capital Fund VIII,2013,Private Equity,Buyout,,,108.20,75.00,398.59,3,0.1381,1.5881
+OCM Opportunities Fund VII,2007,Private Equity,Opportunistic,,115.64,,50.00,85.00,3,0.0731,1.3879
+Oaktree Opportunities Fund VIII,2009,Private Equity,Opportunistic,,,100.00,50.00,125.00,3,0.0907,1.4629
+PAG Asia III,2019,Private Equity,,380.00,250.00,,,350.00,3,0.0805,1.2953
+Palladium Equity Partners IV,2012,Private Equity,,,90.00,100.00,100.00,,3,0.0992,1.6699
+Permira Growth Opportunities II SCSP,2022,Private Equity,Growth Equity,155.00,150.00,,,200.00,3,0.0052,0.9966
+Permira V,2014,Private Equity,Buyout,269.00,264.12,,,378.46,3,0.2065,2.7613
+Providence Equity Partners V,2005,Private Equity,Buyout,,350.00,150.00,150.00,,3,0.0302,1.1931
+Providence Equity Partners VI,2007,Private Equity,Buyout,,700.00,350.00,,250.00,3,0.0592,1.3951
+RRJ Capital Master Fund III,2015,Private Equity,,,200.00,400.00,150.00,,3,0.0752,1.1859
+Siris Partners IV,2019,Private Equity,,100.00,100.00,200.00,,,3,0.0815,1.3368
+TA XI,2010,Private Equity,,,80.00,100.00,,150.00,3,0.2664,3.5911
+TA XII,2016,Private Equity,,,180.00,200.00,,250.00,3,0.3452,3.0703
+TA XIII-A,2019,Private Equity,,,280.00,280.00,,355.00,3,0.2236,1.8405
+TA XV,2025,Private Equity,,,,450.00,200.00,750.00,3,-0.1311,0.8995
+TCV X,2019,Private Equity,Growth Equity,156.59,88.00,,,200.00,3,0.2203,2.6117
+TCV XI,2021,Private Equity,Growth Equity,261.23,200.00,,,250.00,3,0.0456,1.1342
+TPG Asia V,2007,Private Equity,Buyout,360.00,180.00,45.00,,,3,0.0628,1.4468
+TPG Partners VII,2015,Private Equity,Buyout,,,250.00,700.00,600.00,3,0.2018,1.9595
+TPG STAR,2007,Private Equity,Buyout,150.00,,,100.00,100.00,3,0.0620,1.2530
+Tailwind Capital Partners III,2018,Private Equity,,200.00,,,200.00,200.00,3,0.1192,1.4412
+The Veritas Capital Fund IX,2024,Private Equity,Buyout,400.00,,300.00,250.00,,3,,0.0601
+Thoma Bravo Discover IV,2022,Private Equity,Buyout,,100.00,100.00,,200.00,3,0.2132,1.2770
+Thoma Bravo Fund XVI,2025,Private Equity,Buyout,,250.00,,250.00,400.00,3,0.0000,
+Trident IX,2022,Private Equity,,500.00,300.00,,,300.00,3,0.1746,1.2909
+Trident VII,2017,Private Equity,,270.00,150.00,,,250.00,3,0.1867,2.2222
+Trident VIII,2020,Private Equity,,400.00,250.00,,,300.00,3,0.1292,1.5832
+Triton Fund IV,2013,Private Equity,Buyout,92.22,58.69,,,261.58,3,0.1047,1.6891
+Triton Fund V,2019,Private Equity,Buyout,281.66,117.38,,,289.41,3,0.1467,1.5136
+Vestar Capital Partners V,2005,Private Equity,Buyout,,150.00,,100.00,100.00,3,0.0389,1.3113
+Warburg Pincus Private Equity IX,2005,Private Equity,Growth Equity,,,300.00,200.00,700.00,3,0.0960,1.7175
+Warburg Pincus Private Equity X,2007,Private Equity,Growth Equity,,,350.00,400.00,750.00,3,0.0922,1.7596
+ACON Equity Partners 3.5,2012,Private Equity,,,70.00,120.00,,,2,0.0739,1.4839
+ASF VIII B,2020,Private Equity,,300.00,500.00,,,,2,0.1399,1.4005
+Advent Global Technology,2020,Private Equity,,,100.00,,50.00,,2,0.0947,1.4711
+Advent Global Technology II,2022,Private Equity,,,100.00,,100.00,,2,0.1463,1.3485
+Advent International GPE VIII-D,2016,Private Equity,Buyout,,150.00,,,500.00,2,0.1576,2.0960
+Advent International GPE X,2022,Private Equity,Buyout,,300.00,,200.00,,2,0.1880,1.3672
+Advent International GPE X Limited Partnership,2022,Private Equity,Buyout,650.00,,,,600.00,2,0.1595,1.2502
+Advent Latin American Private Equity Fund VI-H,2015,Private Equity,,,,,75.00,160.00,2,0.1271,1.8400
+Affinity Asia Pacific Fund III,2007,Private Equity,,,150.00,,,100.00,2,0.0898,1.4206
+Affinity Asia Pacific Fund IV,2013,Private Equity,,,,150.00,,300.00,2,0.1428,1.7478
+Affinity Asia Pacific Fund V (NO.2),2018,Private Equity,,,200.00,,,350.00,2,0.0685,1.1938
+Apax IX USD,2017,Private Equity,Buyout,,300.00,,,250.00,2,0.1783,1.9045
+Apollo Investment Fund IV,1998,Private Equity,Buyout,150.00,,200.00,,,2,0.0850,1.6519
+Ares Corporate Opportunities Fund III,2008,Private Equity,Opportunistic,400.00,,100.00,,,2,0.2020,2.0824
+Ares Corporate Opportunities Fund IV,2012,Private Equity,Opportunistic,,150.00,150.00,,,2,0.1396,1.8647
+Ares Corporate Opportunities Fund VI,2021,Private Equity,Opportunistic,250.00,,200.00,,,2,0.1621,1.3417
+Asia Alternatives Capital Partners II,2008,Private Equity,,48.93,,50.00,,,2,0.1670,2.5218
+Asia Opportunity Fund II,2005,Private Equity,Opportunistic,,,,100.00,100.00,2,0.0733,1.4100
+BC European Capital IX,2011,Private Equity,,,247.68,,,226.71,2,0.1021,1.6275
+BC European Capital VIII,2005,Private Equity,,,528.23,,,304.76,2,0.0448,1.2189
+BVP Forge Institutional,2023,Private Equity,,35.00,20.00,,,,2,0.1722,1.2336
+Bain Capital Asia Fund V,2023,Private Equity,Buyout,300.00,150.00,,,,2,0.3636,1.2778
+"Bain Capital Europe Fund VI, SCSp",2023,Private Equity,Buyout,161.80,58.69,,,,2,0.2407,1.1807
+Blackstone Capital Partners Asia II,2022,Private Equity,Buyout,,250.00,,,250.00,2,0.3995,1.7770
+Blackstone Capital Partners IV,2003,Private Equity,Buyout,,200.00,300.00,,,2,0.3595,2.5734
+Blackstone Core Equity Partners II,2021,Private Equity,Buyout,1000.00,425.00,,,,2,0.1381,1.3757
+Blackstone Energy Partners II,2015,Private Equity,Energy,,100.00,,200.00,,2,0.0819,1.5092
+Bridgepoint Europe V,2016,Private Equity,Buyout,,,162.29,,258.08,2,0.1609,1.8924
+Bridgepoint Europe VII D,2024,Private Equity,Buyout,97.80,,,,196.84,2,0.2748,1.1378
+CDH Fund V,2014,Private Equity,,200.00,,,100.00,,2,0.0800,1.4604
+CVC Capital Partners IX,2023,Private Equity,Buyout,,,389.51,323.10,,2,,1.1139
+CVC Capital Partners IX (A),2024,Private Equity,Buyout,505.45,375.63,,,,2,0.1352,1.0717
+CVC Capital Partners Strategic Opportunities II,2020,Private Equity,Opportunistic,,234.77,216.39,,,2,0.1988,1.4396
+CVC Capital Partners VI,2014,Private Equity,Buyout,576.28,,,196.50,,2,0.1550,1.9916
+CVC Capital Partners VII,2017,Private Equity,Buyout,,,378.69,245.10,,2,0.2030,2.0066
+CVC Capital Partners VII (A),2018,Private Equity,Buyout,451.87,293.46,,,,2,0.2034,2.0530
+Carlyle Asia Partners V,2018,Private Equity,Buyout,125.00,250.00,,,,2,0.1241,1.2761
+Carlyle Europe Partners II,2003,Private Equity,Buyout,46.22,,108.20,,,2,0.1970,1.6166
+Carlyle Europe Partners III,2007,Private Equity,Buyout,258.24,446.06,,,,2,0.1109,1.6488
+"Carlyle Europe Partners V, S.C.Sp.",2019,Private Equity,Buyout,173.76,176.08,,,,2,0.0105,1.0193
+Carlyle Partners VI,2013,Private Equity,Buyout,300.85,250.00,,,,2,0.1463,1.9295
+Carlyle Partners VIII,2022,Private Equity,Buyout,177.21,,,,300.00,2,0.1081,1.1923
+Carlyle U.S. Equity Opportunities II,2015,Private Equity,Opportunistic,200.00,150.00,,,,2,0.1544,1.8706
+Centerbridge Capital Partners,2006,Private Equity,Distressed/Special Situations,,150.00,,200.00,,2,0.1914,2.0450
+Centerbridge Capital Partners V,2025,Private Equity,Distressed/Special Situations,,,,250.00,400.00,2,,1.0900
+Centerbridge Special Credit III - Flex,2020,Private Credit,Credit,,87.50,,350.00,,2,0.1442,1.4511
+Centerbridge Special Credit Partners II,2012,Private Credit,Credit,,250.00,72.80,,,2,0.0128,1.0547
+Centerbridge Special Credit Partners III,2016,Private Credit,Credit,,37.50,,150.00,,2,0.0972,1.3349
+"Clayton, Dubilier & Rice Fund X",2018,Private Equity,,150.00,250.00,,,,2,0.3064,2.3060
+"Clayton, Dubilier & Rice Fund XI",2021,Private Equity,,142.27,350.00,,,,2,0.0404,1.1109
+"Clayton, Dubilier & Rice Fund XII",2024,Private Equity,,500.00,350.00,,,,2,0.3719,1.3220
+Clearlake Capital Partners III,2012,Private Equity,Buyout,50.00,,27.50,,,2,0.4070,2.8741
+Clearlake Capital Partners IV,2015,Private Equity,Buyout,56.70,,87.00,,,2,0.2770,1.9928
+Clearlake Capital Partners V,2018,Private Equity,Buyout,75.00,,125.00,,,2,0.3430,2.0243
+Clearlake Capital Partners VI,2020,Private Equity,Buyout,,,180.00,150.00,,2,0.1130,1.5730
+Clearwater Capital Partners Fund III,2006,Private Equity,,150.00,,50.00,,,2,0.0160,1.1070
+Coller International Partners VI,2012,Private Equity,,,100.00,,100.00,,2,0.1372,1.5726
+Cypress Merchant Banking Partners II,1999,Private Equity,,,,200.00,,100.00,2,-0.0136,0.9368
+Doughty Hanson & Co III,1997,Private Equity,,,,,250.00,100.00,2,0.1359,1.9100
+Elevation Partners,2005,Private Equity,,,,,100.00,100.00,2,0.1181,1.5850
+Endeavour Capital Fund IV,2004,Private Equity,Buyout,,,,50.00,50.00,2,0.2694,3.4100
+Endeavour Capital Fund VII,2016,Private Equity,Buyout,,,,112.40,125.00,2,0.1669,1.9550
+Essex Woodlands Health Ventures Fund VI,2004,Private Equity,Venture Capital,,,,25.00,25.00,2,0.0318,1.3400
+FS Equity Partners V,2003,Private Equity,,,95.00,50.00,,,2,0.1518,2.0401
+First Reserve Fund IX,2001,Private Equity,Energy,,,,75.00,100.00,2,0.4811,2.8250
+First Reserve Fund X,2004,Private Equity,Energy,,,,100.00,200.00,2,0.3103,1.8150
+First Reserve Fund XII,2008,Private Equity,Energy,,800.00,,,400.00,2,-0.1735,0.4909
+Fisher Lynch Co-Investment Partnership,2006,Private Equity,Co-Investment,,,,250.00,250.00,2,0.0688,1.4850
+Fisher Lynch Co-Investment Partnership II,2011,Private Equity,Co-Investment,,,,500.00,500.00,2,0.1726,2.3050
+FountainVest China Capital Partners Fund III,2017,Private Equity,,,150.00,,,200.00,2,0.1150,1.6759
+FountainVest China Growth Capital Fund,2008,Private Equity,Growth Equity,,50.00,,,50.00,2,0.0665,1.4293
+FountainVest Partners Fund IV,2021,Private Equity,,,150.00,,,250.00,2,-0.1006,0.7802
+Francisco Partners II,2006,Private Equity,Buyout,175.00,,,100.00,,2,0.1040,1.6515
+GGV Capital IV,2011,Private Equity,Venture Capital,,60.00,,50.00,,2,0.0831,1.6988
+GGV Capital Select,2015,Private Equity,Venture Capital,,50.00,,50.00,,2,0.0305,1.2147
+GGV Capital V,2014,Private Equity,Venture Capital,,50.00,,50.00,,2,0.2451,5.0832
+GGV Capital VI,2016,Private Equity,Venture Capital,,45.00,,45.00,,2,0.0776,1.5957
+GGV Capital VI Plus,2018,Private Equity,Venture Capital,,15.00,,15.00,,2,0.1483,1.8455
+GGV Capital VII,2019,Private Equity,Venture Capital,,12.00,,16.00,,2,0.0467,1.2628
+GGV Capital VIII Plus,2021,Private Equity,Venture Capital,,72.00,,18.00,,2,0.0666,1.1985
+GGV Discovery II,2019,Private Equity,,,20.00,,20.00,,2,0.0788,1.4477
+GGV Discovery III,2021,Private Equity,,,30.00,,30.00,,2,0.0643,1.1942
+GI Partners Fund IV,2014,Private Equity,Buyout,,,,100.00,150.00,2,0.1426,2.0950
+GI Partners Fund VI,2021,Private Equity,Buyout,,300.00,,,300.00,2,0.0950,1.2987
+GSO Capital Opportunities Fund II,2011,Private Equity,Opportunistic,,250.00,,100.00,,2,0.0921,1.2545
+GSO Capital Solutions Fund II,2014,Private Equity,,,125.00,100.00,,,2,0.7100,1.0155
+GSO Capital Solutions Fund III,2018,Private Equity,,,250.00,300.00,,,2,0.0974,1.2112
+GTCR Fund XIV,2024,Private Equity,Buyout,,,,250.00,650.00,2,0.6320,1.4350
+GTCR Strategic Growth Fund I,2022,Private Equity,Growth Equity,,,,65.00,165.00,2,0.1051,1.1700
+Genstar Capital Partners X,2021,Private Equity,Buyout,100.00,,,140.00,,2,0.0416,1.1033
+Genstar X Opportunities Fund I,2021,Private Equity,Opportunistic,150.00,,,85.00,,2,0.0861,1.2410
+Genstar XI Opportunities Fund I,2023,Private Equity,Opportunistic,200.00,,,20.90,,2,,1.1574
+Green Equity Investors IV,2003,Private Equity,,,,,100.00,100.00,2,0.1116,1.9100
+Green Equity Investors VI,2012,Private Equity,,,,200.00,,300.00,2,0.1333,2.0092
+Gryphon Partners II,1999,Private Equity,,,,,50.00,32.50,2,0.0466,1.1900
+Hg Saturn 3 A,2023,Private Equity,Buyout,150.00,120.00,,,,2,0.1357,1.2009
+Hony Capital Fund V,2011,Private Equity,,,75.00,100.00,,,2,-0.0389,0.7565
+ICV Partners IV,2018,Private Equity,,,60.00,75.00,,,2,0.1142,1.3797
+Insight Partners XII Buyout Annex Fund,2021,Private Equity,Buyout,150.00,,100.00,,,2,0.0951,1.2484
+Insight Partners XIII,2024,Private Equity,Growth Equity,300.00,,300.00,,,2,,0.9654
+Insight Venture Partners Growth-Buyout Coinvestment Fund (B),2015,Private Equity,Co-Investment,400.00,,,,50.00,2,0.2581,3.4761
+Insight Venture Partners IX,2015,Private Equity,Venture Capital,100.00,,,,150.00,2,0.2321,3.9104
+Insight Venture Partners X,2018,Private Equity,Venture Capital,250.00,,250.00,,,2,0.2300,2.7708
+JMI Equity Fund VII,2011,Private Equity,Growth Equity,,50.00,40.00,,,2,0.1773,2.5086
+Jade Equity Investors,2020,Private Equity,,155.00,,,,175.00,2,0.1944,1.5588
+Joseph Littlejohn Levy Fund II,1994,Private Equity,,,,,50.00,40.00,2,0.0713,1.5050
+"Joseph, Littlejohn & Levy Fund III",1998,Private Equity,,,,,100.00,125.00,2,0.1119,1.5350
+KKR 1982 Fund,1983,Private Equity,Buyout,,,,25.00,12.99,2,0.3812,3.1500
+KKR 1984 Fund,1984,Private Equity,Buyout,,,,99.50,127.10,2,0.2890,4.3550
+KKR 1986 Fund,1986,Private Equity,Buyout,,,,98.30,84.35,2,0.2716,5.0250
+KKR 1987 Fund,1987,Private Equity,Buyout,,,,726.70,626.07,2,0.0871,1.6800
+KKR 1993 Fund,1993,Private Equity,Buyout,,,,350.00,350.00,2,0.1668,1.6800
+KKR 1996 Fund,1997,Private Equity,Buyout,,,,800.00,850.65,2,0.1320,1.6150
+KKR European Fund,1999,Private Equity,Buyout,,,,400.00,400.00,2,0.1971,2.0850
+KKR European Fund III,2008,Private Equity,Buyout,317.27,,,463.00,,2,0.1030,1.5207
+KKR North America XIV SCSp,2025,Private Equity,Buyout,,400.00,500.00,,,2,0.0000,
+KSL Capital Partners II,2006,Private Equity,,,,,100.00,100.00,2,0.1530,1.8850
+KSL Capital Partners Supplemental II TE,2009,Private Equity,,,,,50.00,50.00,2,0.2480,2.1800
+Lindsay Goldberg IV,2015,Private Equity,,136.92,,250.00,,,2,0.2890,2.0347
+Luminate Capital Partners III,2021,Private Equity,,,,,150.00,150.00,2,0.0405,1.1050
+Luminate Capital Partners IV,2025,Private Equity,,,,,150.00,200.00,2,,0.9900
+MBK Partners Fund VI,2024,Private Equity,Buyout,250.00,125.00,,,,2,-0.3004,0.7621
+MBK Partners IV,2017,Private Equity,Buyout,,155.00,,200.00,,2,0.0940,1.5662
+MatlinPatterson Global Opp. Partners. III,2007,Private Equity,,,,,150.00,150.00,2,0.0394,1.2050
+MatlinPatterson Global Opportunities Partners,2002,Private Equity,Opportunistic,,,,75.00,75.00,2,0.1586,1.7100
+New Enterprise Associates 10,2000,Private Equity,,,200.00,,,110.00,2,0.0228,1.1837
+New Enterprise Associates 12,2006,Private Equity,,,160.00,,,50.00,2,0.0631,1.4029
+New Mountain Partners VI,2021,Private Equity,Buyout,289.70,,,,300.00,2,0.1474,1.4100
+New Mountain Partners VII,2024,Private Equity,Buyout,250.00,,,,400.00,2,0.3587,1.0974
+OCM Opportunities Fund,1995,Private Equity,Opportunistic,,,,48.00,38.60,2,0.1027,1.6200
+OCM Opportunities Fund II,1997,Private Equity,Opportunistic,,,,75.00,75.00,2,0.0842,1.5050
+OCM Opportunities Fund III,1999,Private Equity,Opportunistic,,,,100.00,125.00,2,0.1197,1.5000
+OCM Opportunities Fund V,2004,Private Equity,Opportunistic,,,,50.00,30.00,2,0.1411,1.6750
+OCM Opportunities Fund VI,2005,Private Equity,Opportunistic,,,,50.00,30.00,2,0.0872,1.5900
+OCM Principal Opportunities Fund IV,2006,Private Equity,Opportunistic,,,,100.00,150.00,2,0.0881,1.6900
+OVP Venture Partners VI,2001,Private Equity,Venture Capital,,,,40.00,40.00,2,-0.4275,0.2900
+Oak Investment Partners XI,2004,Private Equity,,,75.00,,,100.00,2,-0.0245,0.8118
+Oaktree European Principal Fund III U.S.,2011,Private Equity,Distressed/Special Situations,,75.00,,50.00,,2,0.0462,1.3340
+Oaktree Opportunities Fund IX,2013,Private Equity,Opportunistic,,,,75.00,400.00,2,0.0801,1.8300
+Oaktree Opportunities Fund X,2015,Private Equity,Opportunistic,,,,50.00,200.00,2,0.0861,1.5050
+Oaktree Opportunities Fund XI,2020,Private Equity,Opportunistic,,,,350.00,400.00,2,0.0957,1.3100
+Oaktree Opportunities Fund Xb,2018,Private Equity,Opportunistic,,,,100.00,400.00,2,0.1162,1.7050
+Oaktree Principal Fund V,2010,Private Equity,Distressed/Special Situations,,,,100.00,150.00,2,0.0235,1.1350
+Onex Partners IV,2014,Private Equity,,260.62,200.00,,,,2,0.0691,1.3919
+OrbiMed Private Investments IV,2010,Private Equity,,,40.00,,40.00,,2,0.3177,2.9257
+OrbiMed Private Investments V,2013,Private Equity,,,40.00,,40.00,,2,0.3818,2.3975
+PAG Asia I,2012,Private Equity,,100.00,125.00,,,,2,0.1696,1.9110
+PAG Asia II,2016,Private Equity,,,150.00,,,150.00,2,0.0950,1.6196
+PSG Europe II,2023,Private Equity,,108.03,,,,200.32,2,0.4444,1.2970
+PSG V,2021,Private Equity,,100.00,,,,200.00,2,0.1094,1.2042
+Permira Europe III,2004,Private Equity,Buyout,126.99,352.15,,,,2,0.2538,1.6924
+Permira IV,2006,Private Equity,Buyout,,821.69,,,125.21,2,0.0880,1.6869
+Permira VI,2017,Private Equity,Buyout,,,,250.60,366.80,2,0.1493,2.0700
+Permira VII,2020,Private Equity,Buyout,,,,252.30,400.09,2,0.0874,1.4050
+Permira VII L.P.1,2020,Private Equity,Buyout,553.98,528.23,,,,2,0.0750,1.3029
+Permira VIII,2023,Private Equity,Buyout,,,,257.10,388.86,2,0.1555,1.2700
+Permira VIII-2 SCSp,2023,Private Equity,Buyout,700.39,363.89,,,,2,0.1737,1.1902
+Providence Equity Partners IV,2000,Private Equity,Buyout,,,154.92,150.00,,2,0.2390,1.8995
+Providence Equity Partners VII,2012,Private Equity,Buyout,,,100.00,,300.00,2,0.2080,2.0618
+Providence Equity Partners VIII,2019,Private Equity,Buyout,,,250.00,,400.00,2,0.1361,1.4386
+Quadrangle Capital Partners II,2005,Private Equity,,,100.00,150.00,,,2,0.0685,1.4148
+RRJ Capital Master Fund II,2013,Private Equity,,,,300.00,75.00,,2,0.0860,1.3663
+Roark Capital Partners IV,2016,Private Equity,Buyout,,,,100.00,175.00,2,0.0585,1.4450
+Roark Capital Partners VI,2021,Private Equity,Buyout,,,200.00,250.00,,2,0.1750,1.4193
+SAIF Partners III,2007,Private Equity,,100.00,,50.00,,,2,0.0600,1.5891
+SAIF Partners IV,2010,Private Equity,,120.00,,100.00,,,2,0.0400,1.3803
+Searchlight Capital III,2020,Private Equity,,,150.00,225.00,,,2,0.2290,1.6719
+Seventh Cinven Fund,2019,Private Equity,Buyout,,,346.23,224.40,,2,0.1090,1.2779
+Silver Lake Partners III,2007,Private Equity,Buyout,480.00,,,,250.00,2,0.1804,1.9214
+Silver Lake Partners IV,2013,Private Equity,Buyout,320.00,,,,400.00,2,0.2079,2.6743
+Silver Lake Partners V,2018,Private Equity,Buyout,400.00,,,,540.00,2,0.1178,1.5882
+Silver Lake Partners VI,2021,Private Equity,Buyout,755.24,,,,750.00,2,0.0859,1.2621
+Silver Lake Partners VII,2024,Private Equity,Buyout,370.00,,,,500.00,2,0.2200,1.1847
+Sixth Cinven Fund,2016,Private Equity,Buyout,,,243.44,141.90,,2,0.1720,1.9489
+Sixth Street Growth Partnrs II,2022,Private Equity,Growth Equity,,150.00,,,200.00,2,0.1082,1.2015
+Sixth Street Opportunities Partners II,2012,Private Equity,Opportunistic,,35.44,,,200.00,2,0.1764,1.8079
+Sixth Street Opportunities Partners III (A),2014,Private Equity,Opportunistic,,150.00,,,165.76,2,0.0885,1.5842
+Sixth Street Opportunities Partners IV (A),2019,Private Equity,Opportunistic,,150.00,,,200.00,2,0.1097,1.4931
+Sixth Street Opps Partners V,2022,Private Equity,,,150.00,,,225.00,2,0.0895,1.1848
+Sofinnova Venture Partners VIII,2011,Private Equity,Venture Capital,,30.00,,50.00,,2,0.2189,1.6955
+Summit Partners Growth Equity Fund X-A,2020,Private Equity,Growth Equity,250.00,300.00,,,,2,0.1320,1.4823
+TPG Asia VIII (A),2024,Private Equity,Buyout,250.00,100.00,,,,2,0.1751,1.1482
+TPG Growth III,2015,Private Equity,Growth Equity,,,,200.00,300.00,2,0.1520,1.6050
+TPG Growth III (A),2016,Private Equity,Growth Equity,,200.00,300.00,,,2,0.1521,1.6595
+TPG Growth VI,2024,Private Equity,Growth Equity,200.00,,,,400.00,2,0.1456,1.1438
+TPG Healthcare Partners,2019,Private Equity,Buyout,100.00,,,100.00,,2,0.1205,1.3624
+TPG Healthcare Partners II,2023,Private Equity,Buyout,,,,70.00,120.00,2,0.2662,1.3400
+TPG Partners III,2000,Private Equity,Buyout,,,,300.00,82.00,2,0.2445,2.4200
+TSG Capital Fund II,1995,Private Equity,,,,,40.00,30.00,2,-0.0852,0.6800
+TSG Capital Fund III,1998,Private Equity,,,,,75.00,75.00,2,-0.1351,0.5850
+Tailwind Capital Partners II,2014,Private Equity,,150.00,,,75.00,,2,0.0955,1.4756
+The Eighth Cinven Fund,2024,Private Equity,Buyout,,,281.31,,349.11,2,0.2432,1.0500
+The Rise Fund III,2023,Private Equity,,100.00,,,,250.00,2,0.2549,1.2584
+The Veritas Capital Fund VIII,2022,Private Equity,Buyout,625.00,,,250.00,,2,0.1221,1.2308
+Thoma Bravo Discover Fund III,2021,Private Equity,Buyout,,100.00,,,100.00,2,0.1138,1.4833
+Thoma Bravo Discover Fund V,2025,Private Equity,Buyout,,150.00,,,200.00,2,0.0000,
+Thoma Bravo Fund XII,2016,Private Equity,Buyout,,250.00,400.00,,,2,0.1507,2.1837
+Towerbrook Investors V,2020,Private Equity,Buyout,,,200.00,,450.00,2,0.1623,1.4697
+Towerbrook Investors VI (Onshore),2024,Private Equity,Buyout,100.00,,150.00,,,2,,0.8636
+Trident X,2025,Private Equity,,,300.00,,,200.00,2,0.0000,
+VIP IV,2020,Private Equity,,302.83,234.77,,,,2,0.1032,1.3099
+Valor Equity Partners IV,2017,Private Equity,,75.00,40.00,,,,2,0.2040,3.1401
+Valor Equity Partners VI,2023,Private Equity,,300.00,40.00,,,,2,0.3402,1.4642
+Vestar Capital Partners III,1997,Private Equity,Buyout,,,,25.00,20.00,2,0.0260,1.1200
+Vestar Capital Partners IV,1999,Private Equity,Buyout,,,,100.00,55.00,2,0.1342,1.7800
+Vestar Capital Partners VI,2012,Private Equity,Buyout,,,,75.00,158.64,2,0.2672,1.9050
+Vista Equity Partners Fund III,2007,Private Equity,Buyout,,,100.00,100.00,,2,0.2940,2.2748
+Vista Equity Partners Fund IV,2011,Private Equity,Buyout,,,300.00,100.00,,2,0.1310,1.9674
+Vista Equity Partners Fund V,2014,Private Equity,Buyout,,,400.00,200.00,,2,0.1600,2.1999
+Vista Equity Partners Fund VI,2016,Private Equity,Buyout,,,500.00,500.00,,2,0.1550,2.0410
+Vista Equity Partners Fund VII,2018,Private Equity,Buyout,,,750.00,500.00,,2,0.0490,1.2266
+Vista Equity Partners Fund VIII,2022,Private Equity,Buyout,,,400.00,250.00,,2,,1.2051
+Vista Foundation Fund II,2013,Private Equity,,,,75.00,75.00,,2,0.1330,1.9053
+Vista Foundation Fund III,2016,Private Equity,,,,400.00,200.00,,2,0.1830,1.9236
+Vista Foundation Fund IV,2020,Private Equity,,,100.00,200.00,,,2,0.0230,1.0499
+Vistria Fund V,2024,Private Equity,,,50.00,125.00,,,2,-0.1103,0.9192
+WCAS XIII,2019,Private Equity,,400.00,250.00,,,,2,0.1736,1.6311
+WCAS XIV,2022,Private Equity,,400.00,200.00,,,,2,0.0150,1.0232
+Warburg Pincus China-Southeast Asia II,2019,Private Equity,Growth Equity,,,185.00,,300.00,2,0.0332,1.0837
+Warburg Pincus Energy,2014,Private Equity,Energy,,,200.00,,200.00,2,0.0482,1.2457
+Warburg Pincus Equity Partners,1998,Private Equity,Growth Equity,,,250.00,,400.00,2,0.1030,1.6794
+Warburg Pincus Financial Sector,2018,Private Equity,Growth Equity,,,100.00,,200.00,2,0.1779,1.9331
+Warburg Pincus Financial Sector II,2021,Private Equity,Growth Equity,,,150.00,,200.00,2,0.2273,1.5151
+Warburg Pincus Private Equity XI,2012,Private Equity,Growth Equity,,,100.00,,750.00,2,0.1165,1.6700
+Warburg Pincus Private Equity XII,2015,Private Equity,Growth Equity,,,245.00,,700.00,2,0.1597,2.0170
+"Welsh, Carson, Anderson & Stowe XI",2009,Private Equity,,125.00,250.00,,,,2,0.1147,1.6608
+"Welsh, Carson, Anderson & Stowe XII",2015,Private Equity,,350.00,150.00,,,,2,0.2479,2.4916
+Yucaipa Corporate Initiatives Fund I,2001,Private Equity,,200.00,,200.00,,,2,-0.0370,0.7622
+Yucaipa Corporate Initiatives Fund II,2008,Private Equity,,93.54,50.00,,,,2,-0.0131,0.9049

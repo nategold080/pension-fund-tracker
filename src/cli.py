@@ -398,14 +398,80 @@ def audit_links(ctx):
         click.echo(f"Suspect matches: {suspect_count}")
         click.echo(f"Funds across 2+ pensions: {len(cross)}")
         click.echo(f"Funds across 3+: {len([c for c in cross if c['pf_count'] >= 3])}")
-        click.echo(f"Funds across all 4: {len([c for c in cross if c['pf_count'] >= 4])}")
+        click.echo(f"Funds across 4+: {len([c for c in cross if c['pf_count'] >= 4])}")
+        click.echo(f"Funds across all 5: {len([c for c in cross if c['pf_count'] >= 5])}")
 
-        # Show the 4-way linked funds
-        four_way = [c for c in cross if c["pf_count"] >= 4]
-        if four_way:
-            click.echo(f"\nFunds linked across all 4 pension systems:")
-            for c in four_way:
+        # Show the 5-way linked funds
+        five_way = [c for c in cross if c["pf_count"] >= 5]
+        if five_way:
+            click.echo(f"\nFunds linked across all 5 pension systems:")
+            for c in five_way:
                 click.echo(f'  {c["fund_name"]}')
+
+    finally:
+        db.close()
+
+
+@cli.command("seed-consultants")
+@click.pass_context
+def seed_consultants(ctx):
+    """Load consulting firm seed data from YAML into the database."""
+    from src.seed import load_consulting_seed
+
+    db = Database(ctx.obj["db_path"])
+    try:
+        db.migrate()
+        result = load_consulting_seed(db)
+        click.echo("--- Consulting Seed Data Loaded ---")
+        click.echo(f"  Firms:       {result['firms_loaded']}")
+        click.echo(f"  Aliases:     {result['aliases_loaded']}")
+        click.echo(f"  Engagements: {result['engagements_loaded']}")
+    finally:
+        db.close()
+
+
+@cli.command("consultants")
+@click.option("--fund", default=None, help="Filter by pension fund ID (e.g., calpers)")
+@click.pass_context
+def consultants(ctx, fund):
+    """List consulting firm engagements."""
+    db = Database(ctx.obj["db_path"])
+    try:
+        db.migrate()
+
+        engagements = db.get_consulting_engagements_joined(
+            pension_fund_id=fund,
+        )
+
+        if not engagements:
+            click.echo("No consulting engagements found.")
+            if fund:
+                click.echo(f"  (filtered by fund: {fund})")
+            click.echo("  Run 'seed-consultants' to load seed data.")
+            return
+
+        click.echo(f"--- Consulting Engagements ({len(engagements)}) ---\n")
+
+        # Group by pension fund for readability
+        by_pension = {}
+        for eng in engagements:
+            pf = eng["pension_fund_name"]
+            if pf not in by_pension:
+                by_pension[pf] = []
+            by_pension[pf].append(eng)
+
+        for pf_name, engs in sorted(by_pension.items()):
+            click.echo(f"  {pf_name}:")
+            for eng in engs:
+                current = " (current)" if eng.get("is_current") else ""
+                scope = f" [{eng['mandate_scope']}]" if eng.get("mandate_scope") else ""
+                click.echo(
+                    f"    - {eng['consulting_firm_name']}: "
+                    f"{eng['role']}{scope}{current}"
+                )
+                if eng.get("source_document"):
+                    click.echo(f"      Source: {eng['source_document']}")
+            click.echo()
 
     finally:
         db.close()

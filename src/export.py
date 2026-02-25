@@ -5,6 +5,7 @@ Generates CSV exports and Markdown reports from the database.
 
 import csv
 import logging
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -197,13 +198,21 @@ class Exporter:
 
         pf_ids = [(r["id"], r["name"]) for r in pf_rows]
 
-        # Build dynamic CASE WHEN columns
+        # Build dynamic CASE WHEN columns using parameterized SQL
+        # Note: Column aliases and CASE WHEN identifiers cannot be parameterized,
+        # but the pension_fund_id values come from our own database query above
+        # (not user input), so they are safe. We still validate them as alphanumeric.
         case_parts = []
+        params = []
         for pf_id, pf_name in pf_ids:
+            if not re.match(r'^[a-z0-9_]+$', pf_id):
+                logger.warning(f"Skipping invalid pension_fund_id: {pf_id}")
+                continue
             col = f"{pf_id}_mm"
             case_parts.append(
-                f"MAX(CASE WHEN c.pension_fund_id = '{pf_id}' THEN c.commitment_mm END) as {col}"
+                f"MAX(CASE WHEN c.pension_fund_id = ? THEN c.commitment_mm END) as {col}"
             )
+            params.append(pf_id)
         case_sql = ",\n                ".join(case_parts)
 
         query = f"""SELECT f.fund_name, f.vintage_year, f.asset_class, f.sub_strategy,
@@ -217,7 +226,7 @@ class Exporter:
             HAVING pension_count >= 2
             ORDER BY pension_count DESC, f.fund_name"""
 
-        rows = self.db.conn.execute(query).fetchall()
+        rows = self.db.conn.execute(query, params).fetchall()
 
         if not rows:
             return None
@@ -477,6 +486,12 @@ class Exporter:
                 GROUP BY fund_id HAVING COUNT(DISTINCT pension_fund_id) >= 4
             )"""
         ).fetchone()[0]
+        stats["cross_linked_5"] = self.db.conn.execute(
+            """SELECT COUNT(*) FROM (
+                SELECT fund_id FROM commitments
+                GROUP BY fund_id HAVING COUNT(DISTINCT pension_fund_id) >= 5
+            )"""
+        ).fetchone()[0]
 
         # Total AUM
         total_commitment = self.db.conn.execute(
@@ -510,7 +525,8 @@ class Exporter:
             "Cross-system entity resolution:",
             f"  Funds in 2+ systems:  {stats['cross_linked_2']}",
             f"  Funds in 3+ systems:  {stats['cross_linked_3']}",
-            f"  Funds in all 4:       {stats['cross_linked_4']}",
+            f"  Funds in 4+ systems:  {stats['cross_linked_4']}",
+            f"  Funds in all 5:       {stats['cross_linked_5']}",
             "",
             "Per pension fund:",
         ]
@@ -527,6 +543,77 @@ class Exporter:
         lines.append("=" * 60)
         return "\n".join(lines)
 
+    def export_consulting_engagements_csv(self) -> Path:
+        """Export all consulting engagements with firm and pension fund names.
+
+        Returns:
+            Path to the generated CSV file, or None if no data.
+        """
+        engagements = self.db.get_consulting_engagements_joined()
+        if not engagements:
+            logger.warning("No consulting engagements to export")
+            return None
+
+        filepath = self.export_dir / "consulting_engagements.csv"
+        fieldnames = [
+            "consulting_firm_name", "firm_type", "pension_fund_name",
+            "pension_fund_state", "role", "mandate_scope",
+            "start_date", "end_date", "is_current",
+            "annual_fee_usd", "fee_basis", "contract_term_years",
+            "source_url", "source_document", "extraction_method",
+            "extraction_confidence",
+        ]
+
+        with open(filepath, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
+            writer.writeheader()
+            for eng in engagements:
+                row = {k: eng.get(k) for k in fieldnames}
+                writer.writerow(row)
+
+        logger.info(f"Exported {len(engagements)} consulting engagements to {filepath}")
+        return filepath
+
+    def export_consultant_pension_matrix_csv(self) -> Path:
+        """Export a matrix showing which consulting firms advise which pension funds.
+
+        Returns:
+            Path to the generated CSV file, or None if no data.
+        """
+        engagements = self.db.get_consulting_engagements_joined()
+        if not engagements:
+            return None
+
+        # Build matrix: rows = consulting firms, columns = pension funds
+        firms = {}
+        pension_funds = set()
+        for eng in engagements:
+            firm = eng["consulting_firm_name"]
+            pf = eng["pension_fund_name"]
+            pension_funds.add(pf)
+            if firm not in firms:
+                firms[firm] = {"firm_type": eng.get("firm_type", "")}
+            role_label = eng["role"]
+            if eng.get("is_current"):
+                role_label += " (current)"
+            firms[firm][pf] = role_label
+
+        pf_list = sorted(pension_funds)
+        filepath = self.export_dir / "consultant_pension_matrix.csv"
+        fieldnames = ["consulting_firm", "firm_type"] + pf_list
+
+        with open(filepath, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
+            writer.writeheader()
+            for firm_name in sorted(firms.keys()):
+                row = {"consulting_firm": firm_name, "firm_type": firms[firm_name].get("firm_type", "")}
+                for pf in pf_list:
+                    row[pf] = firms[firm_name].get(pf, "")
+                writer.writerow(row)
+
+        logger.info(f"Exported consultant-pension matrix to {filepath}")
+        return filepath
+
     def export_all(self) -> dict:
         """Export all files.
 
@@ -541,6 +628,8 @@ class Exporter:
         results["cross_pension_matrix"] = self.export_cross_pension_matrix_csv()
         results["performance_comparison"] = self.export_performance_comparison_csv()
         results["performance_by_vintage"] = self.export_performance_by_vintage_csv()
+        results["consulting_engagements"] = self.export_consulting_engagements_csv()
+        results["consultant_pension_matrix"] = self.export_consultant_pension_matrix_csv()
         results["quality"] = self.export_quality_report()
         results["summary_stats"] = self.export_summary_stats_md()
         return results

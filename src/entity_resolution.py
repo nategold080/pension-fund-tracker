@@ -18,6 +18,8 @@ from src.database import Database, generate_id
 from src.utils.normalization import (
     classify_fund_strategy,
     extract_fund_number,
+    extract_gp_from_fund_name,
+    normalize_consulting_firm_name,
     normalize_fund_name,
     normalize_gp_name,
 )
@@ -243,7 +245,21 @@ class FundRegistry:
         """Create a new fund entry in the database and registry."""
         fund_id = generate_id()
         canonical_name = normalize_fund_name(fund_name_raw)
+
+        # If the adapter didn't provide a GP, try to extract it from the fund name
+        if not general_partner:
+            general_partner = extract_gp_from_fund_name(
+                canonical_name if canonical_name else fund_name_raw
+            )
+
         gp_normalized = normalize_gp_name(general_partner) if general_partner else None
+
+        # Store GP alias mapping for auditability (P6)
+        if general_partner and fund_name_raw:
+            self.db.add_gp_alias(
+                canonical_name=general_partner,
+                alias=fund_name_raw,
+            )
 
         asset_class, sub_strategy = classify_fund_strategy(fund_name_raw)
 
@@ -278,5 +294,97 @@ class FundRegistry:
         """Return statistics about the registry."""
         return {
             "total_funds": len(self._funds),
+            "total_aliases": len(self._alias_to_id),
+        }
+
+
+class ConsultingFirmRegistry:
+    """Registry for resolving consulting firm names.
+
+    Much simpler than FundRegistry since there are only ~15 firms.
+    Matching order:
+    1. Exact match on canonical name
+    2. Exact match on known alias
+    3. Fuzzy match (Levenshtein ratio > 0.85)
+    4. No match found
+    """
+
+    def __init__(self, db: Database):
+        self.db = db
+        self._load_registry()
+
+    def _load_registry(self):
+        """Load all consulting firms and aliases from the database."""
+        self._firms = {}  # id -> firm dict
+        self._name_to_id = {}  # normalized name -> firm id
+        self._alias_to_id = {}  # normalized alias -> firm id
+
+        for firm in self.db.list_consulting_firms():
+            self._firms[firm["id"]] = firm
+            normalized = normalize_consulting_firm_name(firm["name"])
+            self._name_to_id[normalized] = firm["id"]
+
+        # Load aliases
+        rows = self.db.conn.execute(
+            "SELECT * FROM consulting_firm_aliases"
+        ).fetchall()
+        for row in rows:
+            alias_normalized = normalize_consulting_firm_name(row["alias"])
+            self._alias_to_id[alias_normalized] = row["consulting_firm_id"]
+
+    def resolve(self, firm_name: str) -> Optional[tuple[str, str]]:
+        """Resolve a consulting firm name to a firm_id and match type.
+
+        Args:
+            firm_name: The firm name as it appears in the source.
+
+        Returns:
+            Tuple of (firm_id, match_type) where match_type is one of:
+            'exact', 'alias', 'fuzzy'. Returns None if no match found.
+        """
+        if not firm_name or not firm_name.strip():
+            return None
+
+        normalized = normalize_consulting_firm_name(firm_name)
+
+        # 1. Exact match on canonical name
+        if normalized in self._name_to_id:
+            firm_id = self._name_to_id[normalized]
+            logger.debug(f"Consulting firm exact match: '{firm_name}' -> {firm_id}")
+            return firm_id, "exact"
+
+        # 2. Exact match on alias
+        if normalized in self._alias_to_id:
+            firm_id = self._alias_to_id[normalized]
+            logger.debug(f"Consulting firm alias match: '{firm_name}' -> {firm_id}")
+            return firm_id, "alias"
+
+        # 3. Fuzzy match
+        best_id = None
+        best_score = 0.0
+        for firm_id, firm in self._firms.items():
+            firm_normalized = normalize_consulting_firm_name(firm["name"])
+            score = fuzz.ratio(normalized, firm_normalized) / 100.0
+            if score > 0.85 and score > best_score:
+                best_score = score
+                best_id = firm_id
+
+        if best_id:
+            # Add as alias for future lookups
+            self.db.add_consulting_firm_alias(best_id, firm_name)
+            self._alias_to_id[normalized] = best_id
+            logger.info(
+                f"Consulting firm fuzzy match: '{firm_name}' -> {best_id} "
+                f"(score={best_score:.3f})"
+            )
+            return best_id, "fuzzy"
+
+        logger.warning(f"No consulting firm match for: '{firm_name}'")
+        return None
+
+    def get_stats(self) -> dict:
+        """Return statistics about the consulting firm registry."""
+        return {
+            "total_firms": len(self._firms),
             "total_aliases": len(self._alias_to_id),
         }

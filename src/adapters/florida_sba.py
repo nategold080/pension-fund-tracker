@@ -27,10 +27,12 @@ from pathlib import Path
 from typing import Optional
 
 import pdfplumber
-import requests
 
 from src.adapters.base import PensionFundAdapter
-from src.utils.normalization import parse_dollar_amount, parse_percentage, parse_multiple
+from src.utils.normalization import (
+    parse_percentage, parse_multiple,
+    rejoin_split_number, extract_as_of_date_from_text,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +104,7 @@ class FloridaSBAAdapter(PensionFundAdapter):
         with pdfplumber.open(io.BytesIO(raw_data)) as pdf:
             # Extract as-of date from first page
             first_text = pdf.pages[0].extract_text() or ""
-            as_of_date = self._extract_as_of_date(first_text)
+            as_of_date = extract_as_of_date_from_text(first_text)
 
             # Detect column boundaries from the first data page
             col_boundaries = None
@@ -259,7 +261,7 @@ class FloridaSBAAdapter(PensionFundAdapter):
             field_values: dict[str, str] = {}
             for i, name in enumerate(col_names):
                 if i + 1 < len(col_texts):
-                    field_values[name] = self._rejoin_number(col_texts[i + 1])
+                    field_values[name] = rejoin_split_number(col_texts[i + 1])
 
             # Extract vintage year
             vintage_text = field_values.get("vintage", "")
@@ -308,36 +310,6 @@ class FloridaSBAAdapter(PensionFundAdapter):
 
         return records
 
-    def _extract_as_of_date(self, text: str) -> Optional[str]:
-        """Extract as-of date from the PDF text."""
-        # Try "As of March 31, 2024" format
-        match = re.search(
-            r"[Aa]s\s+of\s+(January|February|March|April|May|June|July|August|"
-            r"September|October|November|December)\s+(\d{1,2}),?\s+(\d{4})",
-            text,
-        )
-        if match:
-            from dateutil import parser as dateutil_parser
-
-            date_str = f"{match.group(1)} {match.group(2)}, {match.group(3)}"
-            parsed = dateutil_parser.parse(date_str)
-            return parsed.date().isoformat()
-
-        # Try "Q4 2024" format
-        q_match = re.search(r"Q([1-4])\s*(\d{4})", text, re.IGNORECASE)
-        if q_match:
-            q, year = int(q_match.group(1)), int(q_match.group(2))
-            quarter_ends = {1: "03-31", 2: "06-30", 3: "09-30", 4: "12-31"}
-            return f"{year}-{quarter_ends[q]}"
-
-        return None
-
-    @staticmethod
-    def _rejoin_number(text: str) -> str:
-        """Rejoin number parts split by spaces."""
-        if not text:
-            return text
-        return re.sub(r"(\d)\s+(\d)", r"\1\2", text)
 
     @staticmethod
     def _parse_fl_amount(text: str) -> Optional[float]:

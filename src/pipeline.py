@@ -6,11 +6,10 @@ and quality checking across all pension fund sources.
 
 import logging
 import traceback
-from typing import Optional
 
 from src.adapters.base import PensionFundAdapter
 from src.database import Database
-from src.entity_resolution import FundRegistry
+from src.entity_resolution import ConsultingFirmRegistry, FundRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +21,7 @@ class Pipeline:
         self.db = db
         self.db.migrate()
         self.registry = FundRegistry(db)
+        self.consulting_registry = ConsultingFirmRegistry(db)
 
     def run(
         self,
@@ -124,6 +124,14 @@ class Pipeline:
                     source_pension_fund_id=adapter.pension_fund_id,
                 )
 
+                # Compute DPI if not provided but derivable
+                dpi = record.get("dpi")
+                if dpi is None:
+                    called = record.get("capital_called_mm")
+                    distributed = record.get("capital_distributed_mm")
+                    if called is not None and distributed is not None and called > 0:
+                        dpi = round(distributed / called, 4)
+
                 # Insert/update commitment
                 commitment_id = self.db.upsert_commitment(
                     pension_fund_id=adapter.pension_fund_id,
@@ -137,7 +145,7 @@ class Pipeline:
                     remaining_value_mm=record.get("remaining_value_mm"),
                     net_irr=record.get("net_irr"),
                     net_multiple=record.get("net_multiple"),
-                    dpi=record.get("dpi"),
+                    dpi=dpi,
                     as_of_date=record.get("as_of_date"),
                     source_document=record.get("source_document"),
                     source_page=record.get("source_page"),
@@ -165,6 +173,9 @@ class Pipeline:
                     )
                     records_flagged += 1
 
+            # Consulting data extraction phase
+            consulting_extracted = self._extract_consulting_data(adapter)
+
             # Complete the extraction run
             self.db.complete_extraction_run(
                 run_id=run_id,
@@ -180,6 +191,7 @@ class Pipeline:
                 "records_extracted": records_extracted,
                 "records_updated": records_updated,
                 "records_flagged": records_flagged,
+                "consulting_extracted": consulting_extracted,
             }
 
         except Exception as e:
@@ -190,3 +202,63 @@ class Pipeline:
                 errors=error_msg,
             )
             raise
+
+    def _extract_consulting_data(self, adapter: PensionFundAdapter) -> int:
+        """Extract and store consulting engagement data from an adapter.
+
+        Returns:
+            Number of consulting engagements extracted.
+        """
+        try:
+            consulting_records = adapter.extract_consulting_data()
+        except Exception as e:
+            logger.warning(
+                f"Consulting data extraction failed for {adapter.pension_fund_name}: {e}"
+            )
+            return 0
+
+        if not consulting_records:
+            return 0
+
+        count = 0
+        for record in consulting_records:
+            firm_name = record.get("consulting_firm_name")
+            if not firm_name:
+                continue
+
+            # Resolve consulting firm via registry
+            match = self.consulting_registry.resolve(firm_name)
+            if not match:
+                logger.warning(
+                    f"Unknown consulting firm '{firm_name}' from "
+                    f"{adapter.pension_fund_name}, skipping"
+                )
+                continue
+
+            firm_id, match_type = match
+
+            self.db.upsert_consulting_engagement(
+                consulting_firm_id=firm_id,
+                pension_fund_id=adapter.pension_fund_id,
+                role=record["role"],
+                mandate_scope=record.get("mandate_scope"),
+                start_date=record.get("start_date"),
+                end_date=record.get("end_date"),
+                is_current=record.get("is_current"),
+                annual_fee_usd=record.get("annual_fee_usd"),
+                fee_basis=record.get("fee_basis"),
+                contract_term_years=record.get("contract_term_years"),
+                source_url=record.get("source_url", adapter.source_url),
+                source_document=record.get("source_document"),
+                source_page=record.get("source_page"),
+                extraction_method=record.get("extraction_method"),
+                extraction_confidence=record.get("extraction_confidence"),
+            )
+            count += 1
+
+        if count > 0:
+            logger.info(
+                f"Extracted {count} consulting engagements from "
+                f"{adapter.pension_fund_name}"
+            )
+        return count

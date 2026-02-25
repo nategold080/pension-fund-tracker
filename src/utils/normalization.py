@@ -374,6 +374,175 @@ def extract_fund_number(name: str) -> Optional[str]:
     return best_roman
 
 
+# Top GP -> default strategy mapping for when keyword-based classification fails.
+# These are the primary strategies for the largest/most common GPs.
+GP_DEFAULT_STRATEGY: dict[str, tuple[str, str]] = {
+    # Major Buyout GPs
+    "KKR": ("Private Equity", "Buyout"),
+    "Blackstone": ("Private Equity", "Buyout"),
+    "Apollo": ("Private Equity", "Buyout"),
+    "TPG": ("Private Equity", "Buyout"),
+    "Carlyle": ("Private Equity", "Buyout"),
+    "Warburg Pincus": ("Private Equity", "Growth Equity"),
+    "Hellman & Friedman": ("Private Equity", "Buyout"),
+    "Advent International": ("Private Equity", "Buyout"),
+    "Francisco Partners": ("Private Equity", "Buyout"),
+    "Bain Capital": ("Private Equity", "Buyout"),
+    "Silver Lake": ("Private Equity", "Buyout"),
+    "Vista Equity": ("Private Equity", "Buyout"),
+    "Thoma Bravo": ("Private Equity", "Buyout"),
+    "EQT": ("Private Equity", "Buyout"),
+    "CVC Capital Partners": ("Private Equity", "Buyout"),
+    "Permira": ("Private Equity", "Buyout"),
+    "Cinven": ("Private Equity", "Buyout"),
+    "Apax": ("Private Equity", "Buyout"),
+    "Bridgepoint": ("Private Equity", "Buyout"),
+    "Hg": ("Private Equity", "Buyout"),
+    "Clearlake": ("Private Equity", "Buyout"),
+    "Genstar": ("Private Equity", "Buyout"),
+    "GTCR": ("Private Equity", "Buyout"),
+    "Leonard Green": ("Private Equity", "Buyout"),
+    "Madison Dearborn": ("Private Equity", "Buyout"),
+    "Providence Equity": ("Private Equity", "Buyout"),
+    "Welsh Carson": ("Private Equity", "Buyout"),
+    "Cerberus": ("Private Equity", "Buyout"),
+    "Kohlberg": ("Private Equity", "Buyout"),
+    "Veritas Capital": ("Private Equity", "Buyout"),
+    "Platinum Equity": ("Private Equity", "Buyout"),
+    "Roark Capital": ("Private Equity", "Buyout"),
+    "Audax": ("Private Equity", "Buyout"),
+    "American Securities": ("Private Equity", "Buyout"),
+    "Clayton Dubilier & Rice": ("Private Equity", "Buyout"),
+    "Kelso": ("Private Equity", "Buyout"),
+    "New Mountain": ("Private Equity", "Buyout"),
+    "Charlesbank": ("Private Equity", "Buyout"),
+    "Sun Capital": ("Private Equity", "Buyout"),
+    "Sycamore Partners": ("Private Equity", "Buyout"),
+    "Trilantic": ("Private Equity", "Buyout"),
+    "Harvest Partners": ("Private Equity", "Buyout"),
+    "ICG": ("Private Equity", "Buyout"),
+    "PAI Partners": ("Private Equity", "Buyout"),
+    "BC Partners": ("Private Equity", "Buyout"),
+    "Investindustrial": ("Private Equity", "Buyout"),
+    "Nordic Capital": ("Private Equity", "Buyout"),
+    "Triton": ("Private Equity", "Buyout"),
+    "Astorg": ("Private Equity", "Buyout"),
+    "Montagu": ("Private Equity", "Buyout"),
+    "Golden Gate Capital": ("Private Equity", "Buyout"),
+    "MidOcean": ("Private Equity", "Buyout"),
+    "Oak Hill": ("Private Equity", "Buyout"),
+    "Siris Capital": ("Private Equity", "Buyout"),
+    "TowerBrook": ("Private Equity", "Buyout"),
+    "Tower Brook": ("Private Equity", "Buyout"),
+    "Vestar Capital": ("Private Equity", "Buyout"),
+    "Wind Point": ("Private Equity", "Buyout"),
+    "CCMP Capital": ("Private Equity", "Buyout"),
+    "TH Lee": ("Private Equity", "Buyout"),
+    "Thomas H. Lee": ("Private Equity", "Buyout"),
+    "Wellspring Capital": ("Private Equity", "Buyout"),
+    "Peak Rock": ("Private Equity", "Buyout"),
+    "Rhone": ("Private Equity", "Buyout"),
+    "Stone Point Capital": ("Private Equity", "Buyout"),
+    "GI Partners": ("Private Equity", "Buyout"),
+
+    # Growth Equity
+    "General Atlantic": ("Private Equity", "Growth Equity"),
+    "Insight Partners": ("Private Equity", "Growth Equity"),
+    "Summit Partners": ("Private Equity", "Growth Equity"),
+    "TA Associates": ("Private Equity", "Growth Equity"),
+    "TCV": ("Private Equity", "Growth Equity"),
+    "JMI Equity": ("Private Equity", "Growth Equity"),
+
+    # Venture Capital
+    "Sequoia": ("Private Equity", "Venture Capital"),
+    "Andreessen Horowitz": ("Private Equity", "Venture Capital"),
+    "Accel": ("Private Equity", "Venture Capital"),
+    "Bessemer Venture Partners": ("Private Equity", "Venture Capital"),
+    "Greylock": ("Private Equity", "Venture Capital"),
+    "Lightspeed": ("Private Equity", "Venture Capital"),
+    "NEA": ("Private Equity", "Venture Capital"),
+    "Menlo Ventures": ("Private Equity", "Venture Capital"),
+    "Battery Ventures": ("Private Equity", "Venture Capital"),
+    "Index Ventures": ("Private Equity", "Venture Capital"),
+    "Benchmark": ("Private Equity", "Venture Capital"),
+    "Founders Fund": ("Private Equity", "Venture Capital"),
+    "Kleiner Perkins": ("Private Equity", "Venture Capital"),
+    "GGV Capital": ("Private Equity", "Venture Capital"),
+    "Accel-KKR": ("Private Equity", "Venture Capital"),
+    "ARCH Venture": ("Private Equity", "Venture Capital"),
+    "Blue Run Ventures": ("Private Equity", "Venture Capital"),
+    "OVP Venture Partners": ("Private Equity", "Venture Capital"),
+    "Acrew Capital": ("Private Equity", "Venture Capital"),
+    "Industry Ventures": ("Private Equity", "Venture Capital"),
+
+    # Credit / Distressed
+    "Ares": ("Private Credit", "Credit"),
+    "Oaktree": ("Private Equity", "Distressed/Special Situations"),
+    "Angelo Gordon": ("Private Equity", "Distressed/Special Situations"),
+    "Centerbridge": ("Private Equity", "Distressed/Special Situations"),
+    "Elliott": ("Private Equity", "Distressed/Special Situations"),
+
+    # Secondaries / Fund of Funds
+    "Coller Capital": ("Private Equity", "Secondaries"),
+    "HarbourVest": ("Private Equity", "Fund of Funds"),
+    "Lexington Partners": ("Private Equity", "Secondaries"),
+    "Adams Street": ("Private Equity", "Fund of Funds"),
+    "Hamilton Lane": ("Private Equity", "Fund of Funds"),
+    "Pantheon": ("Private Equity", "Fund of Funds"),
+    "StepStone": ("Private Equity", "Fund of Funds"),
+    "AlpInvest": ("Private Equity", "Fund of Funds"),
+    "Partners Group": ("Private Equity", "Fund of Funds"),
+    "Neuberger Berman": ("Private Equity", "Fund of Funds"),
+
+    # Real Estate
+    "Starwood": ("Real Assets", "Real Estate"),
+    "Lone Star": ("Real Assets", "Real Estate"),
+    "Colony Capital": ("Real Assets", "Real Estate"),
+    "Heitman": ("Real Assets", "Real Estate"),
+    "CBRE": ("Real Assets", "Real Estate"),
+    "Hines": ("Real Assets", "Real Estate"),
+    "Tishman Speyer": ("Real Assets", "Real Estate"),
+    "Prologis": ("Real Assets", "Real Estate"),
+    "AEW": ("Real Assets", "Real Estate"),
+    "Rockwood": ("Real Assets", "Real Estate"),
+    "Waterton": ("Real Assets", "Real Estate"),
+
+    # Infrastructure
+    "Global Infrastructure Partners": ("Real Assets", "Infrastructure"),
+    "Antin Infrastructure": ("Real Assets", "Infrastructure"),
+    "I Squared Capital": ("Real Assets", "Infrastructure"),
+    "Stonepeak": ("Real Assets", "Infrastructure"),
+    "Macquarie": ("Real Assets", "Infrastructure"),
+
+    # Energy / Natural Resources
+    "Denham": ("Real Assets", "Natural Resources"),
+    "EnCap": ("Private Equity", "Energy"),
+    "EnCap Flatrock": ("Private Equity", "Energy"),
+    "Kayne Anderson": ("Private Equity", "Energy"),
+    "ArcLight": ("Private Equity", "Energy"),
+    "EIG": ("Private Equity", "Energy"),
+    "First Reserve": ("Private Equity", "Energy"),
+    "Quantum Energy Partners": ("Private Equity", "Energy"),
+
+    # Other
+    "Riverside": ("Private Equity", "Buyout"),
+    "Endeavour Capital": ("Private Equity", "Buyout"),
+    "Morgan Stanley": ("Private Equity", "Buyout"),
+    "Goldman Sachs": ("Private Equity", "Buyout"),
+    "JP Morgan": ("Private Equity", "Buyout"),
+    "JPMorgan": ("Private Equity", "Buyout"),
+    "Actis": ("Private Equity", "Buyout"),
+    "MBK Partners": ("Private Equity", "Buyout"),
+    "Pacific Equity Partners": ("Private Equity", "Buyout"),
+    "Linden Capital": ("Private Equity", "Buyout"),
+    "Symphony Technology": ("Private Equity", "Buyout"),
+    "Butterfly": ("Private Equity", "Buyout"),
+}
+
+# Build a lowercased lookup for GP default strategy
+_GP_STRATEGY_LOOKUP = {k.lower(): v for k, v in GP_DEFAULT_STRATEGY.items()}
+
+
 def classify_fund_strategy(fund_name: str) -> tuple[str, Optional[str]]:
     """Classify a fund's asset class and sub_strategy based on its name.
 
@@ -442,7 +611,14 @@ def classify_fund_strategy(fund_name: str) -> tuple[str, Optional[str]]:
     if 'opportunit' in name_lower:
         return "Private Equity", "Opportunistic"
 
-    # No specific keyword found
+    # No specific keyword found — fall back to GP-based strategy inference
+    # Try to extract the GP from the fund name and look up their default strategy
+    gp = extract_gp_from_fund_name(fund_name)
+    if gp:
+        gp_lower = gp.lower()
+        if gp_lower in _GP_STRATEGY_LOOKUP:
+            return _GP_STRATEGY_LOOKUP[gp_lower]
+
     return "Private Equity", None
 
 
@@ -451,6 +627,22 @@ def normalize_gp_name(name: str) -> str:
     if not name:
         return ""
     return normalize_fund_name(name)
+
+
+def normalize_consulting_firm_name(name: str) -> str:
+    """Normalize a consulting firm name for matching.
+
+    Strips legal suffixes, normalizes whitespace, and lowercases.
+    """
+    if not name:
+        return ""
+    s = name.strip()
+    s = re.sub(r',?\s*LLC$', '', s, flags=re.IGNORECASE)
+    s = re.sub(r',?\s*Ltd\.?$', '', s, flags=re.IGNORECASE)
+    s = re.sub(r',?\s*Inc\.?$', '', s, flags=re.IGNORECASE)
+    s = re.sub(r',?\s*L\.?P\.?$', '', s, flags=re.IGNORECASE)
+    s = re.sub(r'\s+', ' ', s).strip()
+    return s.lower()
 
 
 # ---- GP Extraction from Fund Names ----
@@ -783,5 +975,72 @@ def extract_gp_from_fund_name(fund_name: str) -> Optional[str]:
     # If we got something reasonable (at least 2 chars, not just numbers)
     if s and len(s) >= 2 and not s.replace(' ', '').isdigit():
         return s
+
+    return None
+
+
+def rejoin_split_number(text: str) -> str:
+    """Rejoin number parts that got split by spaces during PDF extraction.
+
+    pdfplumber sometimes splits digits: '7 0,000,000' -> '70,000,000'.
+    This function collapses single-digit-space-digit sequences.
+
+    Args:
+        text: Raw text that may contain split numbers.
+
+    Returns:
+        Text with split numbers rejoined.
+    """
+    if not text:
+        return text
+    return re.sub(r'(\d)\s+(\d)', r'\1\2', text)
+
+
+def extract_as_of_date_from_text(text: str) -> Optional[str]:
+    """Extract an as-of date from PDF text.
+
+    Handles common patterns:
+    - "As of June 30, 2025"
+    - "as of December 31, 2024"
+    - "For the period ending March 31, 2025"
+    - "Q4 2024"
+
+    Args:
+        text: Raw text from a PDF page.
+
+    Returns:
+        ISO date string (YYYY-MM-DD) or None if no date found.
+    """
+    if not text:
+        return None
+
+    # Try "As of [Month] [Day], [Year]" format
+    match = re.search(
+        r'[Aa]s\s+of\s+(January|February|March|April|May|June|July|August|'
+        r'September|October|November|December)\s+(\d{1,2}),?\s+(\d{4})',
+        text
+    )
+    if match:
+        date_str = f"{match.group(1)} {match.group(2)}, {match.group(3)}"
+        parsed = dateutil_parser.parse(date_str)
+        return parsed.date().isoformat()
+
+    # Try "For the period ending [Month] [Day], [Year]"
+    match = re.search(
+        r'[Ff]or\s+the\s+period\s+ending\s+(January|February|March|April|May|June|July|August|'
+        r'September|October|November|December)\s+(\d{1,2}),?\s+(\d{4})',
+        text
+    )
+    if match:
+        date_str = f"{match.group(1)} {match.group(2)}, {match.group(3)}"
+        parsed = dateutil_parser.parse(date_str)
+        return parsed.date().isoformat()
+
+    # Try "Q[1-4] [Year]" format
+    q_match = re.search(r'Q([1-4])\s*(\d{4})', text, re.IGNORECASE)
+    if q_match:
+        q, year = int(q_match.group(1)), int(q_match.group(2))
+        quarter_ends = {1: "03-31", 2: "06-30", 3: "09-30", 4: "12-31"}
+        return f"{year}-{quarter_ends[q]}"
 
     return None

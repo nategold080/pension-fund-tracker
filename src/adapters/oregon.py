@@ -21,7 +21,10 @@ import pdfplumber
 import requests
 
 from src.adapters.base import PensionFundAdapter
-from src.utils.normalization import parse_dollar_amount, parse_percentage, parse_multiple
+from src.utils.normalization import (
+    parse_dollar_amount, parse_percentage, parse_multiple,
+    extract_as_of_date_from_text,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -73,20 +76,6 @@ class OregonAdapter(PensionFundAdapter):
 
         return data
 
-    def _extract_as_of_date(self, all_text: str) -> Optional[str]:
-        """Extract as-of date from the PDF text."""
-        match = re.search(
-            r'[Aa]s\s+of\s+(January|February|March|April|May|June|July|August|'
-            r'September|October|November|December)\s+(\d{1,2}),?\s+(\d{4})',
-            all_text
-        )
-        if match:
-            from dateutil import parser as dateutil_parser
-            date_str = f"{match.group(1)} {match.group(2)}, {match.group(3)}"
-            parsed = dateutil_parser.parse(date_str)
-            return parsed.date().isoformat()
-        return None
-
     def parse(self, raw_data: bytes) -> list[dict]:
         """Parse Oregon PERS PE portfolio PDF."""
         records = []
@@ -95,7 +84,7 @@ class OregonAdapter(PensionFundAdapter):
         with pdfplumber.open(io.BytesIO(raw_data)) as pdf:
             # Get as-of date
             first_text = pdf.pages[0].extract_text() or ""
-            as_of_date = self._extract_as_of_date(first_text)
+            as_of_date = extract_as_of_date_from_text(first_text)
 
             for page in pdf.pages:
                 page_records = self._parse_page_by_words(page, as_of_date)

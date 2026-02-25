@@ -9,7 +9,11 @@ venv/
 .env
 *.db
 *.sqlite
+# Allow pension tracker database for Railway deployment
+!data/pension_tracker.db
 .pytest_cache/
 .DS_Store
-data/
+data/cache/
+data/logs/
+data/exports/
 .claude/

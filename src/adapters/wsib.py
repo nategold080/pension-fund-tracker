@@ -21,7 +21,10 @@ import pdfplumber
 import requests
 
 from src.adapters.base import PensionFundAdapter
-from src.utils.normalization import parse_dollar_amount, parse_percentage, parse_multiple
+from src.utils.normalization import (
+    parse_dollar_amount, parse_percentage, parse_multiple,
+    extract_as_of_date_from_text,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -68,20 +71,6 @@ class WSIBAdapter(PensionFundAdapter):
 
         return data
 
-    def _extract_as_of_date(self, all_text: str) -> Optional[str]:
-        """Extract as-of date from the PDF text."""
-        match = re.search(
-            r'[Aa]s\s+of\s+(January|February|March|April|May|June|July|August|'
-            r'September|October|November|December)\s+(\d{1,2}),?\s+(\d{4})',
-            all_text
-        )
-        if match:
-            from dateutil import parser as dateutil_parser
-            date_str = f"{match.group(1)} {match.group(2)}, {match.group(3)}"
-            parsed = dateutil_parser.parse(date_str)
-            return parsed.date().isoformat()
-        return None
-
     def parse(self, raw_data: bytes) -> list[dict]:
         """Parse WSIB PE IRR report PDF using word-level extraction."""
         records = []
@@ -93,7 +82,7 @@ class WSIBAdapter(PensionFundAdapter):
             for page in pdf.pages:
                 text = page.extract_text() or ""
                 all_text += text + "\n"
-            as_of_date = self._extract_as_of_date(all_text)
+            as_of_date = extract_as_of_date_from_text(all_text)
 
             for page in pdf.pages:
                 page_records = self._parse_page_by_words(page, as_of_date)
@@ -166,6 +155,12 @@ class WSIBAdapter(PensionFundAdapter):
             remaining_value_mm = parse_dollar_amount(market_value_text)
             capital_distributed_mm = parse_dollar_amount(distributions_text)
             net_multiple = parse_multiple(multiple_text)
+            if net_multiple is not None and net_multiple < 0:
+                logger.warning(
+                    f"Negative multiple {net_multiple}x for '{fund_name}' — "
+                    f"likely parsing artifact, using absolute value"
+                )
+                net_multiple = abs(net_multiple)
 
             # Parse IRR
             net_irr = None

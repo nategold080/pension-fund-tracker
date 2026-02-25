@@ -1,8 +1,7 @@
 """LLM integration module (placeholder).
 
-LLM calls are the LAST resort for data extraction. Currently all 4 adapters
-use deterministic parsing with confidence scores of 0.90-1.0, so this module
-is not yet needed.
+LLM calls are the LAST resort for data extraction. Currently all adapters use deterministic parsing with confidence scores
+of 0.90-1.0, so this module is not yet needed.
 
 When needed, this module will:
 - Use the Anthropic API (Claude) with structured output prompts

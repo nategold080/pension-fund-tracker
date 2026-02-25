@@ -1,34 +1,28 @@
 # HTTP and HTML parsing
-requests>=2.31.0
-beautifulsoup4>=4.12.0
-lxml>=4.9.0
+requests>=2.31.0,<3.0
+beautifulsoup4>=4.12.0,<5.0
+lxml>=4.9.0,<6.0
 
 # PDF parsing
-camelot-py[cv]>=0.11.0
-tabula-py>=2.8.0
-pdfplumber>=0.10.0
-
-# Excel/CSV
-openpyxl>=3.1.0
-pandas>=2.1.0
+pdfplumber>=0.10.0,<1.0
 
 # Entity resolution / fuzzy matching
-rapidfuzz>=3.5.0
+rapidfuzz>=3.5.0,<4.0
 
-# LLM (last resort)
-anthropic>=0.18.0
+# Data processing
+pandas>=2.1.0,<3.0
 
 # CLI
-click>=8.1.0
+click>=8.1.0,<9.0
 
 # Utilities
-pyyaml>=6.0
-python-dateutil>=2.8.0
+python-dateutil>=2.8.0,<3.0
+pyyaml>=6.0,<7.0
 
 # Dashboard
-streamlit>=1.32
-plotly>=5.0
+streamlit>=1.32,<2.0
+plotly>=5.0,<6.0
 
 # Testing
-pytest>=7.4.0
-pytest-cov>=4.1.0
+pytest>=7.4.0,<9.0
+pytest-cov>=4.1.0,<6.0

@@ -27,6 +27,7 @@ from bs4 import BeautifulSoup
 
 from src.adapters.base import PensionFundAdapter
 from src.utils.normalization import (
+    extract_as_of_date_from_text,
     parse_dollar_amount,
     parse_percentage,
     parse_vintage_year,
@@ -90,21 +91,10 @@ class CalPERSAdapter(PensionFundAdapter):
         CalPERS states the reporting date on the page, e.g.,
         "as of March 31, 2025".
         """
-        text = soup.get_text()
-        # Look for "as of <date>" pattern
-        match = re.search(
-            r'as of\s+(January|February|March|April|May|June|July|August|'
-            r'September|October|November|December)\s+(\d{1,2}),?\s+(\d{4})',
-            text, re.IGNORECASE
-        )
-        if match:
-            from dateutil import parser as dateutil_parser
-            date_str = f"{match.group(1)} {match.group(2)}, {match.group(3)}"
-            parsed = dateutil_parser.parse(date_str)
-            return parsed.date().isoformat()
-
-        logger.warning("Could not extract as-of date from CalPERS page")
-        return None
+        result = extract_as_of_date_from_text(soup.get_text())
+        if result is None:
+            logger.warning("Could not extract as-of date from CalPERS page")
+        return result
 
     def parse(self, raw_data: str) -> list[dict]:
         """Parse CalPERS HTML table into commitment records.

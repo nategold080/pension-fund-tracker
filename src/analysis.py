@@ -8,7 +8,6 @@ Outputs are saved to data/exports/demo/.
 
 import csv
 import logging
-import random
 from datetime import datetime
 from pathlib import Path
 
@@ -421,7 +420,7 @@ def generate_dataset_readme(db: Database) -> Path:
         cnt = db.conn.execute(
             f"SELECT COUNT(*) FROM commitments WHERE {field} IS NOT NULL"
         ).fetchone()[0]
-        completeness[label] = f"{cnt / total_commitments * 100:.0f}%"
+        completeness[label] = f"{cnt / total_commitments * 100:.0f}%" if total_commitments > 0 else "N/A"
 
     lines = []
     lines.append("# Alternative Investment Commitment Dataset")

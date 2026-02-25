@@ -5,9 +5,8 @@ using BeautifulSoup with the lxml parser.
 """
 
 import logging
-from typing import Optional
 
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
