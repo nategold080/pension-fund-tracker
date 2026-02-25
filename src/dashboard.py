@@ -190,7 +190,7 @@ def fmt_dollars(val, unit="M"):
 
 def fmt_irr(val):
     if pd.isna(val):
-        return ""
+        return "N/A"
     return f"{val:.1%}"
 
 
@@ -208,14 +208,15 @@ def section_header(text):
 
 
 def plotly_dark_layout(fig, **kwargs):
-    fig.update_layout(
+    defaults = dict(
         template="plotly_dark",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family="Inter, sans-serif"),
         margin=dict(l=40, r=20, t=40, b=40),
-        **kwargs,
     )
+    defaults.update(kwargs)
+    fig.update_layout(**defaults)
     return fig
 
 
@@ -395,24 +396,21 @@ def main():
             name="Capital Called",
             orientation="h",
             marker_color="#0984E3",
-            text=cf["total_called"].apply(lambda x: f"${x:.0f}B"),
-            textposition="auto",
+            hovertemplate="%{y}<br>Capital Called: $%{x:.0f}B<extra></extra>",
         ))
         fig.add_trace(go.Bar(
             y=cf["pension_fund"], x=cf["total_distributed"],
             name="Capital Distributed",
             orientation="h",
-            marker_color="#00B894",
-            text=cf["total_distributed"].apply(lambda x: f"${x:.0f}B"),
-            textposition="auto",
+            marker_color="#2ECC71",
+            hovertemplate="%{y}<br>Distributed: $%{x:.0f}B<extra></extra>",
         ))
         fig.add_trace(go.Bar(
             y=cf["pension_fund"], x=cf["total_remaining"],
             name="Remaining Value (NAV)",
             orientation="h",
-            marker_color="#6C5CE7",
-            text=cf["total_remaining"].apply(lambda x: f"${x:.0f}B"),
-            textposition="auto",
+            marker_color="#E17055",
+            hovertemplate="%{y}<br>Remaining: $%{x:.0f}B<extra></extra>",
         ))
         plotly_dark_layout(fig, height=320, barmode="group",
                           xaxis_title="Amount ($B)",
