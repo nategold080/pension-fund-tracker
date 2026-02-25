@@ -493,33 +493,73 @@ def main():
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
-        section_header("Median Net IRR by Pension System")
+        section_header("Net IRR Distribution by Pension System")
 
         perf_data = df.dropna(subset=["net_irr"]).copy()
         perf_data = perf_data[perf_data["net_irr"].between(-0.5, 1.0)]
 
         if not perf_data.empty:
-            irr_stats = perf_data.groupby("pension_fund").agg(
-                median_irr=("net_irr", "median"),
-                fund_count=("net_irr", "count"),
-            ).reset_index().sort_values("median_irr", ascending=True)
+            import numpy as np
 
-            fig = go.Figure(go.Bar(
-                y=irr_stats["pension_fund"],
-                x=irr_stats["median_irr"],
-                orientation="h",
-                marker_color=ACCENT_BLUE,
-                text=irr_stats.apply(
-                    lambda r: f"{r['median_irr']:.1%}  ({int(r['fund_count'])} funds)", axis=1),
-                textposition="inside",
-                insidetextanchor="end",
-                textfont=dict(color="white", size=12),
-                hovertemplate="<b>%{y}</b><br>Median Net IRR: %{x:.1%}<extra></extra>",
-            ))
-            plotly_dark_layout(fig, height=350, showlegend=False,
-                              xaxis=dict(title="Median Net IRR", tickformat=".0%"))
+            pensions = sorted(perf_data["pension_fund"].unique())
+            fig = go.Figure()
+
+            for i, pension in enumerate(pensions):
+                subset = perf_data[perf_data["pension_fund"] == pension]
+                n = len(subset)
+                median_irr = subset["net_irr"].median()
+                q1 = subset["net_irr"].quantile(0.25)
+                q3 = subset["net_irr"].quantile(0.75)
+
+                # Jittered dots — each dot is one fund
+                jitter = np.random.default_rng(42 + i).uniform(-0.28, 0.28, size=n)
+                fig.add_trace(go.Scatter(
+                    x=subset["net_irr"],
+                    y=[i + j for j in jitter],
+                    mode="markers",
+                    marker=dict(size=4, color=PALETTE[i], opacity=0.35),
+                    showlegend=False,
+                    hovertemplate=f"<b>{pension}</b><br>Net IRR: %{{x:.1%}}<extra></extra>",
+                ))
+
+                # IQR line (25th–75th percentile)
+                fig.add_trace(go.Scatter(
+                    x=[q1, q3], y=[i, i],
+                    mode="lines",
+                    line=dict(color="white", width=3),
+                    showlegend=False, hoverinfo="skip",
+                ))
+
+                # Median diamond
+                fig.add_trace(go.Scatter(
+                    x=[median_irr], y=[i],
+                    mode="markers+text",
+                    marker=dict(size=14, color=PALETTE[i], symbol="diamond",
+                                line=dict(color="white", width=2)),
+                    text=[f"{median_irr:.1%}"],
+                    textposition="top center",
+                    textfont=dict(color="white", size=11),
+                    showlegend=False,
+                    hovertemplate=(
+                        f"<b>{pension}</b><br>Median: {median_irr:.1%}<br>"
+                        f"IQR: {q1:.1%} – {q3:.1%}<br>{n} funds<extra></extra>"
+                    ),
+                ))
+
+            # 0% reference line
+            fig.add_vline(x=0, line_dash="dot", line_color="rgba(255,255,255,0.3)")
+
+            plotly_dark_layout(fig, height=400, showlegend=False,
+                              xaxis=dict(title="Net IRR", tickformat=".0%",
+                                         zeroline=False),
+                              yaxis=dict(
+                                  tickvals=list(range(len(pensions))),
+                                  ticktext=[f"{p}  ({len(perf_data[perf_data['pension_fund']==p])})"
+                                            for p in pensions],
+                                  range=[-0.6, len(pensions) - 0.4],
+                              ))
             st.plotly_chart(fig, use_container_width=True)
-            st.caption("NY Common excluded — does not disclose IRR")
+            st.caption("Each dot = one fund  · ◆ median  · white line = interquartile range  · NY Common excluded")
         else:
             st.info("Insufficient performance data.")
 
