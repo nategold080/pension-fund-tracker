@@ -7,6 +7,7 @@
       "document": "Board Meeting Minutes",
       "pages": 126,
       "events_extracted": 14,
+      "insight": "Private credit allocation telegraphed months before formal vote",
       "investment_commitments": [
         {
           "fund": "Menlo Ventures XVII, L.P.",
@@ -59,6 +60,7 @@
       "document": "Board Meeting Minutes",
       "pages": 124,
       "events_extracted": 12,
+      "insight": "New asset class launched — $5B+ private credit deployment",
       "investment_commitments": [
         {
           "fund": "TowerBrook Structured Opportunities Fund IV",
@@ -115,6 +117,7 @@
       "document": "OIC Meeting Materials",
       "pages": 103,
       "events_extracted": 11,
+      "insight": "$1.65B across 6 named GPs + mid-market strategy shift",
       "investment_commitments": [
         {"fund": "GPE XI", "amount_mm": 250, "strategy": "Global PE Buyout", "gp": "Advent International", "gp_relationship": "", "vote": "Staff-approved"},
         {"fund": "Advent Tech III", "amount_mm": 100, "strategy": "Tech Buyout", "gp": "Advent International", "gp_relationship": "", "vote": "Staff-approved"},

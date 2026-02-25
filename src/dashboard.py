@@ -258,6 +258,22 @@ def _fundraising_callout(text):
 
 # ── Board Intelligence Tab ────────────────────────────────────────────────
 
+def _board_card(color, label, title, body):
+    """Render a compact board intelligence card with a colored type label."""
+    st.markdown(
+        f"<div style='background: #1B2A4A; border-left: 3px solid {color}; "
+        f"padding: 12px 16px; margin-bottom: 8px; border-radius: 0 6px 6px 0;'>"
+        f"<span style='font-family: Inter, sans-serif; font-size: 0.7rem; "
+        f"font-weight: 600; color: {color}; text-transform: uppercase; "
+        f"letter-spacing: 0.06em;'>{label}</span><br>"
+        f"<span style='font-family: Inter, sans-serif; font-weight: 600; "
+        f"font-size: 0.92rem; color: #E2E8F0;'>{title}</span>"
+        f"{'<br><span style=\"font-family: Inter, sans-serif; font-size: 0.82rem; color: #94A3B8; line-height: 1.5;\">' + body + '</span>' if body else ''}"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
+
+
 def render_board_intelligence():
     """Render the Board Intelligence tab showing meeting extraction data."""
     data = load_board_intelligence()
@@ -279,11 +295,10 @@ def render_board_intelligence():
         "padding: 20px 24px; margin-bottom: 1.2rem; line-height: 1.7;'>"
         "<span style='font-family: Inter, sans-serif; font-size: 0.95rem; color: #E2E8F0;'>"
         "Our NLP pipeline extracts structured, forward-looking allocation signals from "
-        "public pension fund board meeting minutes. Using deterministic regex pattern "
-        "matching and spaCy named entity recognition, we process 100+ page PDFs in under "
-        "30 seconds — extracting investment commitments, personnel changes, policy shifts, "
-        "and strategic direction changes with full provenance tracking and zero "
-        "hallucination risk. Below are live extractions from three recent board meetings."
+        "public pension fund board meeting minutes — the kind of intelligence that is "
+        "buried across hundreds of pages of narratives, presentation slides, and formal "
+        "motions, and would otherwise require hours of manual review to surface. "
+        "Below are live extractions from recent board meetings."
         "</span></div>",
         unsafe_allow_html=True,
     )
@@ -303,7 +318,7 @@ def render_board_intelligence():
         st.markdown(
             f"<p style='text-align: center; font-family: Inter, sans-serif; "
             f"font-size: 1rem; font-weight: 600; color: #E2E8F0; margin: 6px 0;'>"
-            f"Example {idx + 1} of {len(ordered_meetings)}</p>",
+            f"Example {idx + 1}</p>",
             unsafe_allow_html=True,
         )
     with nav3:
@@ -314,8 +329,9 @@ def render_board_intelligence():
 
     m = ordered_meetings[st.session_state.board_intel_idx]
 
-    # ── Meeting banner ────────────────────────────────────────────────
+    # ── Meeting banner with 3 stats ───────────────────────────────────
     commit_total = sum(c["amount_mm"] for c in m["investment_commitments"])
+    insight = m.get("insight", "")
     st.markdown(
         f"<div style='background: linear-gradient(135deg, #162240, #1B2A4A); "
         f"border: 1px solid #334155; border-radius: 10px; "
@@ -328,33 +344,39 @@ def render_board_intelligence():
         f"color: #94A3B8;'>{m['meeting_date']} &nbsp;&bull;&nbsp; "
         f"{m['document']} ({m['pages']} pages)</span>"
         f"</div>"
-        f"<div style='display: flex; gap: 32px;'>"
+        f"<div style='display: flex; gap: 28px;'>"
         f"<div style='text-align: center;'>"
-        f"<span style='font-family: Inter, sans-serif; font-size: 1.6rem; font-weight: 700; "
+        f"<span style='font-family: Inter, sans-serif; font-size: 1.5rem; font-weight: 700; "
         f"color: {ACCENT_BLUE};'>{m['events_extracted']}</span><br>"
-        f"<span style='font-family: Inter, sans-serif; font-size: 0.75rem; color: #94A3B8; "
+        f"<span style='font-family: Inter, sans-serif; font-size: 0.7rem; color: #94A3B8; "
         f"text-transform: uppercase; letter-spacing: 0.05em;'>Events</span></div>"
         f"<div style='text-align: center;'>"
-        f"<span style='font-family: Inter, sans-serif; font-size: 1.6rem; font-weight: 700; "
+        f"<span style='font-family: Inter, sans-serif; font-size: 1.5rem; font-weight: 700; "
         f"color: {ACCENT_BLUE};'>${commit_total:,.0f}M</span><br>"
-        f"<span style='font-family: Inter, sans-serif; font-size: 0.75rem; color: #94A3B8; "
+        f"<span style='font-family: Inter, sans-serif; font-size: 0.7rem; color: #94A3B8; "
         f"text-transform: uppercase; letter-spacing: 0.05em;'>Commitments</span></div>"
-        f"</div></div></div>",
+        f"<div style='text-align: center;'>"
+        f"<span style='font-family: Inter, sans-serif; font-size: 1.5rem; font-weight: 700; "
+        f"color: {ACCENT_BLUE};'>{len(m.get('forward_looking_signals', []))}</span><br>"
+        f"<span style='font-family: Inter, sans-serif; font-size: 0.7rem; color: #94A3B8; "
+        f"text-transform: uppercase; letter-spacing: 0.05em;'>Signals</span></div>"
+        f"</div></div>"
+        f"<div style='margin-top: 10px; padding-top: 10px; border-top: 1px solid #334155;'>"
+        f"<span style='font-family: Inter, sans-serif; font-size: 0.7rem; font-weight: 600; "
+        f"color: #94A3B8; text-transform: uppercase; letter-spacing: 0.06em;'>Insight</span>"
+        f"<br><span style='font-family: Inter, sans-serif; font-size: 0.95rem; "
+        f"color: #E2E8F0;'>{insight}</span>"
+        f"</div></div>",
         unsafe_allow_html=True,
     )
 
-    # ── Strategic allocation change (WSIB Nov highlight) ──────────────
+    # ── Extracted Intelligence (single consolidated feed) ─────────────
+    section_header("Extracted Intelligence")
+
+    # SAA change (most prominent — only WSIB Nov)
     if m.get("strategic_allocation_change"):
         saa = m["strategic_allocation_change"]
-        section_header("Strategic Asset Allocation Change")
-        st.markdown(
-            f"<div style='background: #162240; border-left: 4px solid #E17055; "
-            f"padding: 14px 18px; border-radius: 0 8px 8px 0; margin-bottom: 14px;'>"
-            f"<span style='font-family: Inter, sans-serif; font-size: 0.95rem; "
-            f"color: #E2E8F0; line-height: 1.6;'>{saa['description']}</span></div>",
-            unsafe_allow_html=True,
-        )
-
+        _board_card("#E17055", "Strategic Shift", saa["description"], "")
         saa_df = pd.DataFrame(saa["changes"])
         st.dataframe(
             saa_df,
@@ -370,199 +392,114 @@ def render_board_intelligence():
         )
         st.markdown("")
 
-    # ── Key board actions summary ─────────────────────────────────────
-    section_header("Key Board Actions")
-    st.markdown(
-        "<div style='background: #162240; border: 1px solid #334155; border-radius: 8px; "
-        "padding: 16px 20px; margin-bottom: 14px; line-height: 1.7;'>"
-        "<span style='font-family: Inter, sans-serif; font-size: 0.88rem; color: #94A3B8;'>"
-        "The following actions were extracted automatically from a "
-        f"<strong style='color: #E2E8F0;'>{m['pages']}-page</strong> board document. "
-        "This intelligence — buried across meeting narratives, presentation slides, and "
-        "formal motions — would otherwise require hours of manual review to surface. "
-        "Unlike the Portfolio Analytics tab (which tracks historical commitment data from "
-        "published holdings), these are <strong style='color: #E2E8F0;'>forward-looking "
-        "signals</strong> extracted from live board proceedings."
-        "</span></div>",
-        unsafe_allow_html=True,
-    )
+    # Investment commitments
+    for c in m.get("investment_commitments", []):
+        rel = f" ({c['gp_relationship']})" if c.get("gp_relationship") else ""
+        _board_card(
+            ACCENT_BLUE, "Commitment Approved",
+            f"${c['amount_mm']:,.0f}M \u2192 {c['fund']}",
+            f"{c['strategy']} &nbsp;&bull;&nbsp; {c['gp']}{rel}"
+            + (f" &nbsp;&bull;&nbsp; {c['vote']}" if c.get("vote") else ""),
+        )
 
-    if m["investment_commitments"]:
-        for c in m["investment_commitments"]:
-            rel = ""
-            if c.get("gp_relationship"):
-                rel = (f" <span style='color: #94A3B8;'>({c['gp_relationship']})</span>")
-            st.markdown(
-                f"<div style='background: #1B2A4A; border-left: 3px solid {ACCENT_BLUE}; "
-                f"padding: 10px 14px; margin-bottom: 6px; border-radius: 0 6px 6px 0;'>"
-                f"<span style='font-family: Inter, sans-serif; font-weight: 600; "
-                f"font-size: 0.9rem; color: #E2E8F0;'>"
-                f"${c['amount_mm']:,.0f}M &rarr; {c['fund']}</span>"
-                f"<span style='font-family: Inter, sans-serif; font-size: 0.82rem; "
-                f"color: #94A3B8;'> &nbsp;&bull;&nbsp; {c['strategy']} "
-                f"&nbsp;&bull;&nbsp; {c['gp']}</span>{rel}</div>",
-                unsafe_allow_html=True,
-            )
-        st.markdown("")
+    # Dissent
+    for d in m.get("dissent", []):
+        _board_card(
+            "#FF7675", "Dissent",
+            d["person"],
+            f"{d['detail']}<br>"
+            f"<span style='font-weight: 600;'>Outcome:</span> {d['outcome']}",
+        )
 
-    # ── Dissent (show prominently before other items) ─────────────────
-    if m.get("dissent"):
-        section_header("Dissenting Statements")
-        for d in m["dissent"]:
-            st.markdown(
-                f"<div style='background: #2d1a1a; border: 1px solid #5a2d2d; "
-                f"border-left: 4px solid #FF7675; "
-                f"padding: 16px 20px; border-radius: 0 8px 8px 0; margin-bottom: 10px;'>"
-                f"<span style='font-family: Inter, sans-serif; font-weight: 700; "
-                f"font-size: 1rem; color: #FF7675;'>{d['person']}</span>"
-                f"<span style='font-family: Inter, sans-serif; font-size: 0.85rem; "
-                f"color: #94A3B8;'> &nbsp;&bull;&nbsp; {d['topic']}</span><br>"
-                f"<span style='font-family: Inter, sans-serif; font-size: 0.9rem; "
-                f"color: #E2E8F0; line-height: 1.6;'>{d['detail']}</span><br>"
-                f"<span style='font-family: Inter, sans-serif; font-size: 0.85rem; "
-                f"font-weight: 600; color: #94A3B8; margin-top: 6px; display: inline-block;'>"
-                f"Outcome: {d['outcome']}</span></div>",
-                unsafe_allow_html=True,
-            )
-        st.markdown("")
+    # Policy approvals
+    for pa in m.get("policy_approvals", []):
+        _board_card("#00B894", "Policy Approved", pa["policy"], pa["status"])
 
-    # ── Personnel, policy, manager sections ──────────────────────────
-    has_personnel = bool(m["personnel_changes"])
-    has_policy = bool(m.get("policy_approvals"))
-    has_manager = bool(m.get("manager_selections"))
+    # Personnel changes
+    for pc in m.get("personnel_changes", []):
+        vote_str = f" &nbsp;&bull;&nbsp; {pc['vote']}" if pc.get("vote") else ""
+        _board_card(
+            "#6C5CE7", pc["event"],
+            pc["person"],
+            f"{pc['new_role']}{vote_str}",
+        )
 
-    # Build list of section renderers so we can lay them out adaptively
-    _sections = []
+    # Manager selections
+    for ms in m.get("manager_selections", []):
+        _board_card(
+            "#6C5CE7", "Manager Selection",
+            ms["manager"],
+            f"{ms['mandate']} &nbsp;&bull;&nbsp; {ms['vote']}",
+        )
 
-    if has_personnel:
-        def _render_personnel(m=m):
-            section_header("Personnel & Organizational Changes")
-            pc_df = pd.DataFrame(m["personnel_changes"])
-            display_cols = {"event": "Event", "person": "Person",
-                            "new_role": "Role / Position"}
-            if any(p.get("vote") for p in m["personnel_changes"]):
-                display_cols["vote"] = "Vote"
-            st.dataframe(
-                pc_df[list(display_cols.keys())],
-                column_config=display_cols,
-                use_container_width=True,
-                hide_index=True,
-            )
-        _sections.append(_render_personnel)
-
-    if has_policy:
-        def _render_policy(m=m):
-            section_header("Policy Approvals")
-            for pa in m["policy_approvals"]:
-                st.markdown(
-                    f"<div style='background: #162240; border-left: 3px solid #00B894; "
-                    f"padding: 10px 14px; margin-bottom: 6px; border-radius: 0 6px 6px 0;'>"
-                    f"<span style='font-family: Inter, sans-serif; font-weight: 600; "
-                    f"font-size: 0.9rem; color: #E2E8F0;'>{pa['policy']}</span><br>"
-                    f"<span style='font-family: Inter, sans-serif; font-size: 0.82rem; "
-                    f"color: #94A3B8;'>{pa['status']}</span></div>",
-                    unsafe_allow_html=True,
-                )
-        _sections.append(_render_policy)
-
-    if has_manager:
-        def _render_manager(m=m):
-            section_header("Manager Selections")
-            for ms in m["manager_selections"]:
-                st.markdown(
-                    f"<div style='background: #162240; border-left: 3px solid #6C5CE7; "
-                    f"padding: 10px 14px; margin-bottom: 6px; border-radius: 0 6px 6px 0;'>"
-                    f"<span style='font-family: Inter, sans-serif; font-weight: 600; "
-                    f"font-size: 0.9rem; color: #E2E8F0;'>{ms['manager']}</span><br>"
-                    f"<span style='font-family: Inter, sans-serif; font-size: 0.82rem; "
-                    f"color: #94A3B8;'>{ms['mandate']} &nbsp;&bull;&nbsp; {ms['vote']}</span></div>",
-                    unsafe_allow_html=True,
-                )
-        _sections.append(_render_manager)
-
-    if len(_sections) >= 2:
-        col1, col2 = st.columns(2)
-        with col1:
-            _sections[0]()
-        with col2:
-            _sections[1]()
-        for fn in _sections[2:]:
-            fn()
-    else:
-        for fn in _sections:
-            fn()
-
-    if _sections:
-        st.markdown("")
+    st.markdown("")
 
     # ── Forward-looking signals ───────────────────────────────────────
     if m.get("forward_looking_signals"):
-        section_header("Forward-Looking Allocation Signals")
+        section_header("Forward-Looking Signals")
         for sig in m["forward_looking_signals"]:
             _signal_card(sig["signal"], sig["detail"])
-        st.markdown("")
 
     # ── Fundraising signal callout ────────────────────────────────────
     if m.get("fundraising_signal"):
+        st.markdown("")
         _fundraising_callout(m["fundraising_signal"])
 
     st.markdown("")
-    st.markdown("")
 
-    # ── Coverage & Methodology ────────────────────────────────────────
-    section_header("Coverage & Pipeline Performance")
+    # ── Coverage & Methodology (collapsed) ────────────────────────────
+    with st.expander("Coverage & Pipeline Methodology"):
+        col1, col2 = st.columns(2)
 
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.markdown("**Current Coverage**")
-        cov_df = pd.DataFrame(coverage)
-        st.dataframe(
-            cov_df,
-            column_config={
-                "system": "Pension System",
-                "aum": "AUM",
-                "frequency": "Meeting Frequency",
-                "doc_type": "Document Type",
-                "richness": "Signal Richness",
-            },
-            use_container_width=True,
-            hide_index=True,
-        )
-
-    with col2:
-        st.markdown("**Pipeline Performance**")
-        for label, value in [
-            ("Avg. events per meeting", stats["avg_events_per_meeting"]),
-            ("Commitment extraction accuracy", stats["commitment_accuracy"]),
-            ("False positive rate", stats["false_positive_rate"]),
-            ("Forward-looking signals per meeting", stats["signals_per_meeting"]),
-            ("Processing time per document", stats["processing_time"]),
-        ]:
-            st.markdown(
-                f"<div style='display: flex; justify-content: space-between; "
-                f"padding: 8px 0; border-bottom: 1px solid #334155;'>"
-                f"<span style='font-family: Inter, sans-serif; font-size: 0.9rem; "
-                f"color: #94A3B8;'>{label}</span>"
-                f"<span style='font-family: Inter, sans-serif; font-size: 0.9rem; "
-                f"font-weight: 600; color: #E2E8F0;'>{value}</span></div>",
-                unsafe_allow_html=True,
+        with col1:
+            st.markdown("**Current Coverage**")
+            cov_df = pd.DataFrame(coverage)
+            st.dataframe(
+                cov_df,
+                column_config={
+                    "system": "Pension System",
+                    "aum": "AUM",
+                    "frequency": "Meeting Frequency",
+                    "doc_type": "Document Type",
+                    "richness": "Signal Richness",
+                },
+                use_container_width=True,
+                hide_index=True,
             )
 
-    st.markdown("")
-    st.markdown(
-        "<div style='background: #1B2A4A; border: 1px solid #334155; border-radius: 10px; "
-        "padding: 16px 20px; line-height: 1.7;'>"
-        "<span style='font-family: Inter, sans-serif; font-size: 0.88rem; color: #E2E8F0;'>"
-        "<strong>Extraction methodology:</strong> All extraction is deterministic and rule-based. "
-        "Regex pattern matching identifies structured events (commitments, motions, elections) "
-        "and spaCy NER tags entities (organizations, dollar amounts, personnel). "
-        "No LLM is used for primary extraction, ensuring reproducibility, auditability, "
-        "and zero hallucination risk. Every data point includes its source document, page number, "
-        "section header, and the extraction pattern that matched."
-        "</span></div>",
-        unsafe_allow_html=True,
-    )
+        with col2:
+            st.markdown("**Pipeline Performance**")
+            for label, value in [
+                ("Avg. events per meeting", stats["avg_events_per_meeting"]),
+                ("Commitment extraction accuracy", stats["commitment_accuracy"]),
+                ("False positive rate", stats["false_positive_rate"]),
+                ("Forward-looking signals per meeting", stats["signals_per_meeting"]),
+                ("Processing time per document", stats["processing_time"]),
+            ]:
+                st.markdown(
+                    f"<div style='display: flex; justify-content: space-between; "
+                    f"padding: 8px 0; border-bottom: 1px solid #334155;'>"
+                    f"<span style='font-family: Inter, sans-serif; font-size: 0.9rem; "
+                    f"color: #94A3B8;'>{label}</span>"
+                    f"<span style='font-family: Inter, sans-serif; font-size: 0.9rem; "
+                    f"font-weight: 600; color: #E2E8F0;'>{value}</span></div>",
+                    unsafe_allow_html=True,
+                )
+
+        st.markdown("")
+        st.markdown(
+            "<div style='background: #1B2A4A; border: 1px solid #334155; border-radius: 10px; "
+            "padding: 16px 20px; line-height: 1.7;'>"
+            "<span style='font-family: Inter, sans-serif; font-size: 0.88rem; color: #E2E8F0;'>"
+            "<strong>Extraction methodology:</strong> All extraction is deterministic and rule-based. "
+            "Regex pattern matching identifies structured events (commitments, motions, elections) "
+            "and spaCy NER tags entities (organizations, dollar amounts, personnel). "
+            "No LLM is used for primary extraction, ensuring reproducibility, auditability, "
+            "and zero hallucination risk. Every data point includes its source document, page number, "
+            "section header, and the extraction pattern that matched."
+            "</span></div>",
+            unsafe_allow_html=True,
+        )
 
 
 # ── Page layout ───────────────────────────────────────────────────────────
