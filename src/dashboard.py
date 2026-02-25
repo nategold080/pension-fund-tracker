@@ -223,10 +223,9 @@ def plotly_dark_layout(fig, **kwargs):
 # ── Page layout ───────────────────────────────────────────────────────────
 
 def main():
-    favicon = Path(__file__).resolve().parent.parent / ".streamlit" / "favicon.png"
     st.set_page_config(
         page_title="Pension Fund Investment Tracker",
-        page_icon=str(favicon) if favicon.exists() else ":chart_with_upwards_trend:",
+        page_icon="\U0001f4ca",
         layout="wide",
         initial_sidebar_state="collapsed",
     )
