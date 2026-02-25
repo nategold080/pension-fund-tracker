@@ -325,6 +325,21 @@ def main():
         unsafe_allow_html=True,
     )
 
+    # ── Overview / Proof of Concept Note ──────────────────────────────
+    st.markdown(
+        "<div style='background: #1B2A4A; border: 1px solid #334155; border-radius: 10px; "
+        "padding: 20px 24px; margin-bottom: 1.2rem; line-height: 1.7;'>"
+        "<span style='font-family: Inter, sans-serif; font-size: 0.95rem; color: #E2E8F0;'>"
+        "This dashboard aggregates alternative investment commitment data from public disclosures "
+        "of major U.S. pension systems — cross-referencing how the same private equity and venture "
+        "capital funds are valued across different institutional investors. "
+        "The current dataset covers <strong>5 pension systems</strong> and serves as a "
+        "<strong>proof of concept</strong> for a comprehensive cross-pension analytics platform. "
+        "Expansion to additional state and municipal pension funds is underway."
+        "</span></div>",
+        unsafe_allow_html=True,
+    )
+
     # ── Load data ──────────────────────────────────────────────────────
     if not DB_PATH.exists():
         st.error(f"Database not found at {DB_PATH}. Run the pipeline first.")
@@ -966,14 +981,18 @@ investment commitment data from public disclosures of major U.S. pension systems
     st.markdown("")
     st.divider()
     st.markdown(
-        "<div style='text-align: center; color: #94A3B8; font-size: 0.8rem; padding: 8px 0;'>"
+        "<div style='text-align: center; padding: 16px 0;'>"
+        "<p style='font-family: Inter, sans-serif; font-size: 1.3rem; font-weight: 600; "
+        "color: #FFFFFF; margin-bottom: 6px;'>Built by Nathan Goldberg</p>"
+        "<p style='font-family: Inter, sans-serif; font-size: 1rem; margin-top: 0; margin-bottom: 16px;'>"
+        "<a href='mailto:nathanmauricegoldberg@gmail.com' style='color: #0984E3; text-decoration: none;'>nathanmauricegoldberg@gmail.com</a>"
+        " &nbsp;&bull;&nbsp; "
+        "<a href='https://www.linkedin.com/in/nathan-goldberg-62a44522a' target='_blank' "
+        "style='color: #0984E3; text-decoration: none;'>LinkedIn</a></p>"
+        "<p style='font-family: Inter, sans-serif; font-size: 0.8rem; color: #94A3B8; margin-top: 0;'>"
         "Pension Fund Alternative Investment Tracker &bull; "
         "Data sourced from official public pension fund disclosures &bull; "
-        "Deterministic extraction with provenance tracking"
-        "<br>"
-        "Built by <strong>Nathan Goldberg</strong> &nbsp;|&nbsp; "
-        "<a href='mailto:nathanmauricegoldberg@gmail.com' style='color: #0984E3; text-decoration: none;'>nathanmauricegoldberg@gmail.com</a> &nbsp;|&nbsp; "
-        "<a href='https://www.linkedin.com/in/nathan-goldberg-62a44522a' target='_blank' style='color: #0984E3; text-decoration: none;'>LinkedIn</a>"
+        "Deterministic extraction with provenance tracking</p>"
         "</div>",
         unsafe_allow_html=True,
     )
