@@ -17,7 +17,7 @@
           "gp_relationship": "Since 2000; 6 prior funds; $665M total",
           "vote": "Carried unanimously",
           "context": "AI-focused investment thesis; Menlo has increased weighting toward artificial intelligence across both early and growth portfolios",
-          "fund_target_mm": 900
+          "fund_target_mm": 650
         },
         {
           "fund": "Menlo Inflection Fund IV",
@@ -27,7 +27,7 @@
           "gp_relationship": "Same GP",
           "vote": "Carried unanimously",
           "context": "Growth-stage complement to Fund XVII; targets AI and enterprise software at scale",
-          "fund_target_mm": 1500
+          "fund_target_mm": 800
         }
       ],
       "personnel_changes": [
@@ -47,8 +47,8 @@
           "detail": "Meketa presented 'From Modeling to Policy,' a full SAA review comparing current portfolio (25% PE, 18% RE, 0% private credit) against modeled alternatives with higher private market allocations (28% PE, 21% RE, 3% private credit)."
         },
         {
-          "signal": "Private credit education session — 14-month arc",
-          "detail": "Board received educational briefing on 'Private Credit Offers Many Benefits,' covering diversification, cash flow predictability, and downside protection. This precedes the November vote to add private credit as a new asset class. Education timeline spans July 2024 through September 2025, indicating a deliberate 14-month preparation arc before the formal allocation vote."
+          "signal": "Private credit education session",
+          "detail": "Board received educational briefing on 'Private Credit Offers Many Benefits,' covering diversification, cash flow predictability, and downside protection. This precedes the November vote to add private credit as a new asset class. The SAA study built on earlier modeling work presented at the July 2025 board meeting."
         },
         {
           "signal": "Decision factor voting exercise",
@@ -74,13 +74,13 @@
           "gp_relationship": "Since 2013; $1.1B committed across prior funds",
           "vote": "Carried unanimously",
           "context": "Pulled forward from 2026 plan; targets macro dislocation and corporate restructuring opportunities",
-          "sector_focus": "Corporate restructuring, financial services, industrials",
+          "sector_focus": "Business services, consumer, financial services, healthcare",
           "fund_target_mm": 4000
         }
       ],
       "personnel_changes": [
         {"event": "Committee Appointment", "person": "Tracy Stanley", "new_role": "Public Markets Committee Chair", "vote": "Carried unanimously"},
-        {"event": "Committee Removal", "person": "Sara Ketelsen", "new_role": "Removed from Board — term ended", "vote": ""},
+        {"event": "Committee Removal", "person": "Sara Ketelsen", "new_role": "Removed from Public Markets Committee", "vote": "Carried unanimously"},
         {"event": "Committee Appointment", "person": "Liz Lewis", "new_role": "Audit Committee Chair", "vote": "Carried unanimously"},
         {"event": "Reappointment", "person": "Mary Pugh", "new_role": "Board member reappointed through 2028", "vote": "Carried unanimously"},
         {"event": "Reappointment", "person": "George Zinn", "new_role": "Board member reappointed through 2028", "vote": "Carried unanimously"}
@@ -96,21 +96,21 @@
           "person": "Treasurer Mike Pellicciotti",
           "topic": "SAA change — private markets overweight",
           "sentiment": "negative",
-          "detail": "Read a formal statement into the record opposing the SAA change, citing $40B cumulative underperformance of private vs. public markets, 51% illiquid allocation vs. ~32% peer average, and excessive fee levels. Proposed alternative allocation reducing private markets exposure.",
+          "detail": "Read a formal statement into the record opposing the SAA change, citing $40B cumulative underperformance of private vs. public markets, 51% illiquid allocation vs. ~30% peer average (a 21-percentage-point gap), and excessive fee levels. Proposed alternative allocation reducing private markets exposure.",
           "outcome": "Motion carried with Treasurer opposed"
         },
         {
           "person": "Treasurer Mike Pellicciotti",
           "topic": "TowerBrook commitment — pulled forward from 2026",
           "sentiment": "negative",
-          "detail": "Questioned the acceleration of the TowerBrook commitment from the 2026 plan into the current period, citing timing and process concerns.",
+          "detail": "Voted against the $400M TowerBrook VII commitment, which was pulled forward from the 2026 plan. Minutes record the opposed vote but do not detail specific objections.",
           "outcome": "Motion carried with Treasurer opposed"
         },
         {
           "person": "Treasurer Mike Pellicciotti",
           "topic": "2026 Public Equity Annual Plan",
           "sentiment": "negative",
-          "detail": "Opposed the Public Equity Annual Plan, citing concerns about the continued reduction of public equity allocation in favor of illiquid alternatives.",
+          "detail": "Voted against the 2026 Public Equity Annual Plan. Minutes note he 'shared his appreciation of the Public Equity Team and their work' before casting the opposed vote.",
           "outcome": "Motion carried with Treasurer opposed"
         }
       ],
@@ -118,7 +118,7 @@
         "description": "Board approved a new Strategic Asset Allocation introducing private credit at 3%, a brand-new asset class for WSIB.",
         "changes": [
           {"asset_class": "Public Equity", "prior": "30%", "new": "28%", "range": "23 – 33%", "change": "-2%"},
-          {"asset_class": "Fixed Income", "prior": "20%", "new": "19%", "range": "14 – 24%", "change": "-1%"},
+          {"asset_class": "Fixed Income", "prior": "19%", "new": "19%", "range": "15 – 23%", "change": "—"},
           {"asset_class": "Private Equity", "prior": "25%", "new": "23%", "range": "18 – 28%", "change": "-2%"},
           {"asset_class": "Private Credit", "prior": "—", "new": "3%", "range": "1 – 5%", "change": "+3% (new)"},
           {"asset_class": "Real Estate", "prior": "18%", "new": "18%", "range": "13 – 23%", "change": "—"},
@@ -148,7 +148,7 @@
           "detail": "GQG Partners, LSV Asset Management, and Sands Capital Management mandates under review — upcoming decisions represent potential reallocation or manager replacement events."
         }
       ],
-      "fundraising_signal": "The 3% private credit allocation across WSIB's $180B+ portfolio implies approximately $5B+ in new private credit deployment over the buildout period. TowerBrook commitment pulled forward from 2026 plan signals macro regime focus and urgency. Treasurer's dissent cites 51% illiquid vs. ~32% peer average — a metric fundraisers should understand when positioning. This is actionable intelligence for any credit fund in market."
+      "fundraising_signal": "The 3% private credit allocation across WSIB's $180B+ portfolio implies approximately $5B+ in new private credit deployment over the buildout period. TowerBrook commitment pulled forward from 2026 plan signals macro regime focus and urgency. Treasurer's dissent cites 51% illiquid vs. ~30% peer average — a metric fundraisers should understand when positioning. This is actionable intelligence for any credit fund in market."
     },
     {
       "pension_system": "Oregon Investment Council (OPERF)",
@@ -186,7 +186,7 @@
         },
         {
           "signal": "Mid-market strategy shift + small-fund outperformance",
-          "detail": "2026 initiative: 'Increase lower-middle and middle-market exposure.' Supported by data showing small/mid-market funds outperform by 150–240 bps, with 55%+ of top-quartile returns concentrated in funds under $5B."
+          "detail": "2026 initiative: 'Increase lower-middle and middle-market exposure.' Supported by Burgiss data showing sub-$1B buyout funds returned 17.6% vs. 12.4% for $5B+ funds over 5 years, and $1B–$5B funds returned 14.0% over the same period."
         },
         {
           "signal": "Co-investment target: ~20%",
@@ -197,7 +197,7 @@
           "detail": "Materials emphasize fee awareness and alignment of interest as key selection factors, signaling Oregon's preference for GP-friendly but cost-conscious terms."
         }
       ],
-      "fundraising_signal": "Oregon's explicit commitment table names the exact GPs winning allocations, the dollar amounts, and the strategy categories. The stated priority shift toward mid-market and increased co-investment is directly actionable for placement teams targeting Oregon OPERF. Small/mid-market funds showing 150–240 bps outperformance advantage and fee sensitivity language suggest Oregon will favor emerging and mid-market managers with strong alignment terms."
+      "fundraising_signal": "Oregon's explicit commitment table names the exact GPs winning allocations, the dollar amounts, and the strategy categories. The stated priority shift toward mid-market and increased co-investment is directly actionable for placement teams targeting Oregon OPERF. Burgiss data in the materials shows sub-$5B buyout funds outperforming larger funds over 5- and 10-year periods, and fee sensitivity language suggests Oregon will favor managers with strong alignment terms."
     }
   ],
   "pipeline_stats": {
