@@ -307,11 +307,11 @@ def render_board_intelligence():
     if "board_intel_idx" not in st.session_state:
         st.session_state.board_intel_idx = 0
 
+    n_meetings = len(ordered_meetings)
     nav1, nav2, nav3 = st.columns([1, 4, 1])
     with nav1:
-        if st.button("\u2190  Previous", use_container_width=True,
-                     disabled=(st.session_state.board_intel_idx == 0)):
-            st.session_state.board_intel_idx -= 1
+        if st.button("\u2190  Previous", use_container_width=True):
+            st.session_state.board_intel_idx = (st.session_state.board_intel_idx - 1) % n_meetings
             st.rerun()
     with nav2:
         idx = st.session_state.board_intel_idx
@@ -322,9 +322,8 @@ def render_board_intelligence():
             unsafe_allow_html=True,
         )
     with nav3:
-        if st.button("Next  \u2192", use_container_width=True,
-                     disabled=(st.session_state.board_intel_idx >= len(ordered_meetings) - 1)):
-            st.session_state.board_intel_idx += 1
+        if st.button("Next  \u2192", use_container_width=True):
+            st.session_state.board_intel_idx = (st.session_state.board_intel_idx + 1) % n_meetings
             st.rerun()
 
     m = ordered_meetings[st.session_state.board_intel_idx]
@@ -373,25 +372,6 @@ def render_board_intelligence():
     # ── Extracted Intelligence (single consolidated feed) ─────────────
     section_header("Extracted Intelligence")
 
-    # SAA change (most prominent — only WSIB Nov)
-    if m.get("strategic_allocation_change"):
-        saa = m["strategic_allocation_change"]
-        _board_card("#E17055", "Strategic Shift", saa["description"], "")
-        saa_df = pd.DataFrame(saa["changes"])
-        st.dataframe(
-            saa_df,
-            column_config={
-                "asset_class": "Asset Class",
-                "prior": "Prior Target",
-                "new": "New Target",
-                "range": "Policy Range",
-                "change": "Change",
-            },
-            use_container_width=True,
-            hide_index=True,
-        )
-        st.markdown("")
-
     # Investment commitments
     for c in m.get("investment_commitments", []):
         rel = f" ({c['gp_relationship']})" if c.get("gp_relationship") else ""
@@ -430,6 +410,24 @@ def render_board_intelligence():
             "#6C5CE7", "Manager Selection",
             ms["manager"],
             f"{ms['mandate']} &nbsp;&bull;&nbsp; {ms['vote']}",
+        )
+
+    # SAA change table (at bottom of feed)
+    if m.get("strategic_allocation_change"):
+        saa = m["strategic_allocation_change"]
+        _board_card("#E17055", "Strategic Shift", saa["description"], "")
+        saa_df = pd.DataFrame(saa["changes"])
+        st.dataframe(
+            saa_df,
+            column_config={
+                "asset_class": "Asset Class",
+                "prior": "Prior Target",
+                "new": "New Target",
+                "range": "Policy Range",
+                "change": "Change",
+            },
+            use_container_width=True,
+            hide_index=True,
         )
 
     st.markdown("")
